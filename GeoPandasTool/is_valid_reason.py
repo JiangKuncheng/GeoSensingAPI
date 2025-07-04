@@ -28,4 +28,4 @@ def is_valid_reason(geojson_str):
     gseries = gpd.GeoSeries(geometries)
 
     # 调用 is_valid_reason
-    return gseries.is_valid_reason.tolist()
+    return gseries.is_valid_reason().tolist()

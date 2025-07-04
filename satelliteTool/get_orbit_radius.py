@@ -23,7 +23,7 @@ def get_orbit_radius(tle_inputs: dict) -> dict:
             satellite = EarthSatellite(lines[1], lines[2], lines[0], ts)
             t = ts.now()
             geocentric = satellite.at(t)
-            position_km = np.linalg.norm(geocentric.position.km)
+            position_km = float(np.linalg.norm(np.array(geocentric.position.km)))
             return position_km
         except Exception:
             return None

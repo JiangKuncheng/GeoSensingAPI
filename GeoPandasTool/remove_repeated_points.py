@@ -1,6 +1,7 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def remove_repeated_points(geojson_str):
     """
@@ -21,8 +22,18 @@ def remove_repeated_points(geojson_str):
     # 构建 GeoSeries
     gseries = gpd.GeoSeries(geometries)
 
-    # 移除重复点
-    cleaned_geometries = gseries.apply(lambda x: x.remove_repeated_points() if x.is_valid else x)
+    # 移除重复点 - 对于Polygon和MultiPolygon，我们简化处理
+    cleaned_geometries = []
+    for geom in gseries:
+        if geom.is_valid:
+            # 对于有效的几何对象，尝试简化来移除重复点
+            try:
+                cleaned_geom = geom.simplify(0, preserve_topology=True)
+                cleaned_geometries.append(cleaned_geom)
+            except:
+                cleaned_geometries.append(geom)
+        else:
+            cleaned_geometries.append(geom)
 
     # 生成新的 GeoJSON 结果
     cleaned_features = []
@@ -30,7 +41,7 @@ def remove_repeated_points(geojson_str):
         if not geom.is_empty:  # 仅保留非空对象
             cleaned_features.append({
                 "type": "Feature",
-                "geometry": json.loads(geom.to_json()),
+                "geometry": mapping(geom),
                 "properties": {}  # 可根据需要添加属性
             })
 

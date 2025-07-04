@@ -28,6 +28,6 @@ def geom_almost_equal(geojson_str, other_geojson_str, tolerance=1e-9):
     # 检查是否几乎相等（在容差范围内）
     result = []
     for geometry in gseries:
-        result.append(any(geometry.almost_equals(other_geometry, tolerance) for other_geometry in other_geometries))
+        result.append(any(geometry.equals_exact(other_geometry, tolerance) for other_geometry in other_geometries))
 
     return result

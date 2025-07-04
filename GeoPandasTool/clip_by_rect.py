@@ -1,6 +1,7 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def clip_by_rect(geojson_str, xmin, ymin, xmax, ymax):
     """
@@ -32,7 +33,7 @@ def clip_by_rect(geojson_str, xmin, ymin, xmax, ymax):
         if not geom.is_empty:  # 仅保留裁剪后仍有数据的对象
             clipped_features.append({
                 "type": "Feature",
-                "geometry": json.loads(geom.to_json()),
+                "geometry": mapping(geom),
                 "properties": geojson["features"][i].get("properties", {})  # 保留原始属性
             })
 
