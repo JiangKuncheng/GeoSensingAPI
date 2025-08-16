@@ -1,16 +1,17 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def reverse(geojson_str):
     """
-    反转 Overpass API 获取的 GeoJSON 数据中的几何对象的坐标顺序。
+    反转 Overpass API 获取的 GeoJSON 数据中几何对象的坐标顺序。
 
     参数:
-        geojson_str (str): GeoJSON 字符串。
+        geojson_str (str): GeoJSON 字符串
 
     返回:
-        str: 反转坐标后的 GeoJSON 字符串。
+        str: 反转后的 GeoJSON 字符串
     """
     # 解析 GeoJSON 数据
     geojson_data = json.loads(geojson_str)
@@ -21,8 +22,8 @@ def reverse(geojson_str):
     # 构建 GeoSeries
     gseries = gpd.GeoSeries(geometries)
 
-    # 反转几何对象的坐标顺序
-    reversed_geometries = gseries.apply(lambda x: x.reverse() if x.is_valid else x)
+    # 反转几何对象
+    reversed_geometries = gseries.reverse()
 
     # 生成新的 GeoJSON 结果
     reversed_features = []
@@ -30,7 +31,7 @@ def reverse(geojson_str):
         if not geom.is_empty:  # 仅保留非空对象
             reversed_features.append({
                 "type": "Feature",
-                "geometry": json.loads(geom.to_json()),
+                "geometry": mapping(geom),
                 "properties": {}  # 可根据需要添加属性
             })
 

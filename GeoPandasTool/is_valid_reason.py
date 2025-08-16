@@ -24,8 +24,15 @@ def is_valid_reason(geojson_str):
     else:
         raise ValueError("输入的 GeoJSON 不包含 Feature 或 FeatureCollection")
 
-    # 构建 GeoSeries
-    gseries = gpd.GeoSeries(geometries)
-
-    # 调用 is_valid_reason
-    return gseries.is_valid_reason.tolist()
+    # 检查每个几何图形的合法性原因
+    validity_reasons = []
+    for geom in geometries:
+        try:
+            if geom.is_valid:
+                validity_reasons.append("Valid")
+            else:
+                validity_reasons.append(geom.is_valid_reason)
+        except Exception as e:
+            validity_reasons.append(f"Error: {str(e)}")
+    
+    return validity_reasons

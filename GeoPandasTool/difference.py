@@ -34,7 +34,7 @@ def difference(geojson_str, clip_geojson_str):
         if not geom.is_empty:  # 仅保留差集后仍有数据的对象
             diff_features.append({
                 "type": "Feature",
-                "geometry": json.loads(geom.to_json()),
+                "geometry": geom.__geo_interface__,
                 "properties": geojson["features"][i].get("properties", {})  # 保留原始属性
             })
 

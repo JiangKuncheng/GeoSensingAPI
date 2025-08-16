@@ -1,6 +1,7 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def translate(geojson_str, xoff=0.0, yoff=0.0):
     """
@@ -32,7 +33,7 @@ def translate(geojson_str, xoff=0.0, yoff=0.0):
         if not geom.is_empty:  # 仅保留非空对象
             translated_features.append({
                 "type": "Feature",
-                "geometry": json.loads(geom.to_json()),
+                "geometry": mapping(geom),
                 "properties": {}  # 可根据需要添加属性
             })
 

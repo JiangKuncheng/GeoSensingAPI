@@ -1,6 +1,7 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def simplify(geojson_str, tolerance=0.01, preserve_topology=True):
     """
@@ -32,7 +33,7 @@ def simplify(geojson_str, tolerance=0.01, preserve_topology=True):
         if not geom.is_empty:  # 仅保留非空对象
             simplified_features.append({
                 "type": "Feature",
-                "geometry": json.loads(geom.to_json()),
+                "geometry": mapping(geom),
                 "properties": {}  # 可根据需要添加属性
             })
 

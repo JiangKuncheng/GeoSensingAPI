@@ -1,6 +1,7 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def centroid(geojson_str):
     """
@@ -28,11 +29,15 @@ def centroid(geojson_str):
     centroid_features = []
     for geom in centroids:
         if not geom.is_empty:  # 仅保留非空对象
-            centroid_features.append({
-                "type": "Feature",
-                "geometry": json.loads(geom.to_json()),
-                "properties": {}  # 可根据需要添加属性
-            })
+            try:
+                centroid_features.append({
+                    "type": "Feature",
+                    "geometry": mapping(geom),
+                    "properties": {}  # 可根据需要添加属性
+                })
+            except Exception as e:
+                # 如果单个几何对象处理失败，跳过
+                continue
 
     centroid_geojson = {
         "type": "FeatureCollection",
