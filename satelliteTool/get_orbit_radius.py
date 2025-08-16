@@ -1,3 +1,5 @@
+from typing import Optional
+
 from skyfield.api import EarthSatellite, load
 import numpy as np
 
@@ -14,7 +16,7 @@ def get_orbit_radius(tle_inputs: dict) -> dict:
     """
     ts = load.timescale()
 
-    def calculate_radius(tle_data: str) -> float | None:
+    def calculate_radius(tle_data: str) -> Optional[float]:
         lines = tle_data.strip().split("\n")
         if len(lines) < 3:
             return None

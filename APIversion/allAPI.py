@@ -1763,3 +1763,146 @@ def total_bounds_api(req: TotalBoundsRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+class UAVCoverageRequest(BaseModel):
+    geojson_path: str = Field(..., description="GeoJSON文件路径")
+    num_drones: int = Field(3, description="无人机数量，默认3")
+    swath_width: float = Field(0.0008, description="单次扫描宽度，默认0.0008")
+    altitude: float = Field(100, description="无人机飞行高度，默认100")
+    overlap: float = Field(0.2, description="路径重叠率(0-1)，默认0.2")
+    max_turn_angle: float = Field(45, description="最大转弯角度约束(度)，默认45")
+    angle: float = Field(30, description="路径方向角度(度)，默认30")
+    save_plot: bool = Field(True, description="是否保存可视化图片，默认True")
+
+
+class UAVCoverageResponse(BaseModel):
+    success: bool
+    message: str
+    data: Dict
+    plot_image: Optional[str] = None
+
+
+@app.post("/uav_coverage_planning", response_model=UAVCoverageResponse)
+def uav_coverage_planning(req: UAVCoverageRequest):
+    """
+    UAV覆盖规划API
+    
+    功能：
+    1. 加载GeoJSON文件中的目标区域
+    2. 为多无人机生成覆盖路径
+    3. 计算路径代价和覆盖率
+    4. 生成可视化结果
+    
+    参数：
+    - geojson_path: GeoJSON文件路径
+    - num_drones: 无人机数量
+    - swath_width: 单次扫描宽度
+    - altitude: 无人机飞行高度
+    - overlap: 路径重叠率
+    - max_turn_angle: 最大转弯角度约束
+    - angle: 路径方向角度
+    - save_plot: 是否保存可视化图片
+    
+    返回：
+    - success: 是否成功
+    - message: 返回信息
+    - data: 规划结果数据
+    - plot_image: 可视化图片的base64编码（可选）
+    """
+    try:
+        # 检查GeoJSON文件是否存在
+        if not os.path.exists(req.geojson_path):
+            raise HTTPException(status_code=400, detail=f"GeoJSON文件不存在: {req.geojson_path}")
+        
+        # 创建规划器
+        planner = CoveragePlanner(
+            geojson_path=req.geojson_path,
+            swath_width=req.swath_width,
+            altitude=req.altitude,
+            overlap=req.overlap,
+            max_turn_angle=req.max_turn_angle
+        )
+        
+        # 规划覆盖路径
+        drone_paths = planner.plan_coverage(num_drones=req.num_drones, angle=req.angle)
+        
+        # 检查结果
+        if not drone_paths:
+            return UAVCoverageResponse(
+                success=False,
+                message="路径规划失败",
+                data={}
+            )
+        
+        # 计算路径信息
+        path_info = []
+        total_cost = 0
+        
+        for i, path in enumerate(drone_paths):
+            path_cost = planner.path_cost(path)
+            total_cost += path_cost
+            
+            path_info.append({
+                "drone_id": i + 1,
+                "path_points": len(path),
+                "path_cost": round(path_cost, 2),
+                "path_coordinates": path
+            })
+        
+        # 计算覆盖率
+        coverage_percent = planner.calculate_coverage(drone_paths)
+        
+        # 准备返回数据
+        result_data = {
+            "planning_time": round(planner.planning_time, 2),
+            "total_cost": round(total_cost, 2),
+            "coverage_percent": round(coverage_percent, 2),
+            "num_drones": req.num_drones,
+            "drone_paths": path_info,
+            "parameters": {
+                "swath_width": req.swath_width,
+                "altitude": req.altitude,
+                "overlap": req.overlap,
+                "max_turn_angle": req.max_turn_angle,
+                "angle": req.angle
+            }
+        }
+        
+        # 生成可视化图片
+        plot_image = None
+        if req.save_plot:
+            try:
+                # 创建图片缓冲区
+                buffer = io.BytesIO()
+                
+                # 绘制覆盖图
+                planner.plot_coverage(drone_paths, save_path=None)
+                
+                # 保存到缓冲区
+                plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+                buffer.seek(0)
+                
+                # 转换为base64编码
+                plot_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                
+                # 关闭图片
+                plt.close()
+                
+            except Exception as e:
+                print(f"生成可视化图片失败: {e}")
+                plot_image = None
+        
+        return UAVCoverageResponse(
+            success=True,
+            message="UAV覆盖规划成功",
+            data=result_data,
+            plot_image=plot_image
+        )
+        
+    except Exception as e:
+        print(f"UAV覆盖规划API异常: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=f"UAV覆盖规划失败: {str(e)}")
+
+
+
