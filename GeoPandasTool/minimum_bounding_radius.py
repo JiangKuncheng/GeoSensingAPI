@@ -28,4 +28,4 @@ def minimum_bounding_radius(geojson_str):
     gseries = gpd.GeoSeries(geometries)
 
     # 调用 minimum_bounding_radius
-    return gseries.minimum_bounding_radius.tolist()
+    return gseries.minimum_bounding_radius().tolist()

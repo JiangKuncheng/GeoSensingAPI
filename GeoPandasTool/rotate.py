@@ -1,6 +1,7 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def rotate(geojson_str, angle, origin='centroid', use_radians=False):
     """
@@ -33,7 +34,7 @@ def rotate(geojson_str, angle, origin='centroid', use_radians=False):
         if not geom.is_empty:  # 仅保留非空对象
             rotated_features.append({
                 "type": "Feature",
-                "geometry": json.loads(geom.to_json()),
+                "geometry": mapping(geom),
                 "properties": {}  # 可根据需要添加属性
             })
 

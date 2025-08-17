@@ -1,137 +1,140 @@
 import geojson
-import json
-import os
-from skyfield.api import load, EarthSatellite
+from skyfield.api import EarthSatellite, Loader
 from datetime import datetime, timedelta
 import math
-from typing import List, Dict, Union
+from shapely.geometry import Point, mapping
+from shapely.ops import transform
+from pyproj import Proj, Transformer
+from pytz import utc
 
-
-def get_coverage_lace(satellite_configs: Union[Dict, List[Dict]]) -> Dict[str, str]:
+def get_coverage_lace(
+    tle_dict: dict,
+    start_time_str: str,
+    end_time_str: str,
+    fov: float = 10.0,
+    interval_seconds: int = 300
+):
     """
-    计算卫星视场角覆盖的地面区域并保存为 GeoJSON 文件。
+    计算多个卫星在指定时间段内的地面覆盖轨迹，并返回一个GeoJSON。
+    函数接受一个包含卫星TLE的字典作为输入。
 
-    参数:
-        satellite_configs (Union[Dict, List[Dict]]): 
-            单个卫星配置字典或配置字典列表，每个配置包含：
-            {
-                "tle_str": "TLE数据字符串",
-                "start_time_str": "开始时间",
-                "end_time_str": "结束时间", 
-                "interval": 时间间隔(秒),
-                "fov": 视场角(度),
-                "output_path": "输出文件路径"
-            }
-
-    返回:
-        Dict[str, str]: 键为output_path，值为处理结果状态
+    :param tle_dict: 一个字典，键是卫星名称(str)，值是两行的TLE字符串(str)。
+    :param start_time_str: 观测开始时间的字符串 (例如 "2025-08-01 00:00:00.000")。
+    :param end_time_str: 观测结束时间的字符串 (例如 "2025-08-01 23:59:59.000")。
+    :param fov: 卫星的视场角 (Field of View)，单位是度。默认为 10.0。
+    :param interval_seconds: 计算轨迹点的时间间隔，单位是秒。默认为 300 (5分钟)。
+    :return: GeoJSON 格式的 FeatureCollection。
     """
-    # 确保data目录存在
-    os.makedirs("data", exist_ok=True)
-    
+    load = Loader('.')
     ts = load.timescale()
-    
-    # 统一处理为列表格式
-    configs = [satellite_configs] if isinstance(satellite_configs, dict) else satellite_configs
-    
-    results = {}
+    all_features = []
 
-    for config in configs:
-        tle_str = config["tle_str"]
-        start_time_str = config["start_time_str"] 
-        end_time_str = config["end_time_str"]
-        interval = config["interval"]
-        fov = config["fov"]
-        output_path = config["output_path"]
+    # 修正：循环处理字典中的每一个卫星
+    for name, tle_lines_str in tle_dict.items():
+        print(f"---> Processing satellite: {name}")
+        
+        # 1. 解析TLE和时间
         try:
-            all_features = []
-            
-            lines = tle_str.strip().split('\n')
-            name = lines[0].strip()
-            tle_line1 = lines[1].strip()
-            tle_line2 = lines[2].strip()
+            tle_line1, tle_line2 = tle_lines_str.strip().split('\n')
+        except ValueError:
+            print(f"!!! Warning: Skipping '{name}' due to invalid TLE format.")
+            continue
 
-            satellite = EarthSatellite(tle_line1, tle_line2, name, ts)
+        satellite = EarthSatellite(tle_line1.strip(), tle_line2.strip(), name, ts)
 
-            start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S.%f")
-            end_time = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S.%f")
+        start_dt = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=utc)
+        end_dt = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=utc)
 
-            current_time = start_time
-            observation_count = 0
-            
-            while current_time <= end_time:
-                t = ts.utc(current_time.year, current_time.month, current_time.day,
-                           current_time.hour, current_time.minute, current_time.second)
-                geocentric = satellite.at(t)
-                subpoint = geocentric.subpoint()
-                lon, lat = subpoint.longitude.degrees, subpoint.latitude.degrees
+        # 2. 创建时间点数组
+        time_points = []
+        current_dt = start_dt
+        while current_dt <= end_dt:
+            time_points.append(current_dt)
+            current_dt += timedelta(seconds=interval_seconds)
 
-                # 计算视场角形成的覆盖区域（改进算法）
-                # 地球半径 6371km，将视场角转换为地表覆盖半径
-                earth_radius = 6371.0
-                satellite_altitude = geocentric.distance().km - earth_radius
-                
-                # 根据卫星高度和视场角计算地表覆盖半径
-                if satellite_altitude > 0:
-                    coverage_radius_deg = math.degrees(math.atan(
-                        satellite_altitude * math.tan(math.radians(fov / 2)) / earth_radius
-                    ))
-                else:
-                    coverage_radius_deg = fov / 111.0  # 简单近似：1度约111km
-                
-                # 生成覆盖区域多边形（圆形近似）
-                circle_points = []
-                for angle in range(0, 361, 15):  # 每15度一个点，减少数据量
-                    angle_rad = math.radians(angle)
-                    point_lon = lon + coverage_radius_deg * math.cos(angle_rad)
-                    point_lat = lat + coverage_radius_deg * math.sin(angle_rad)
-                    
-                    # 确保经纬度在有效范围内
-                    point_lon = max(-180, min(180, point_lon))
-                    point_lat = max(-90, min(90, point_lat))
-                    
-                    circle_points.append([point_lon, point_lat])
-                
-                # 闭合多边形
-                circle_points.append(circle_points[0])
+        if not time_points:
+            continue
 
-                coverage_polygon = geojson.Polygon([circle_points])
+        t_skyfield = ts.from_datetimes(time_points)
+        geocentric = satellite.at(t_skyfield)
+        subpoint = geocentric.subpoint()
 
-                feature = geojson.Feature(
-                    geometry=coverage_polygon,
-                    properties={
-                        "satellite": name,
-                        "timestamp": current_time.isoformat(),
-                        "observation_id": observation_count,
-                        "satellite_altitude_km": satellite_altitude,
-                        "coverage_radius_deg": coverage_radius_deg,
-                        "longitude": lon,
-                        "latitude": lat
-                    }
-                )
-                all_features.append(feature)
-                observation_count += 1
+        # 3. 循环生成每个精确的足迹
+        for i in range(len(time_points)):
+            lon = subpoint.longitude.degrees[i]
+            lat = subpoint.latitude.degrees[i]
+            alt_km = subpoint.elevation.km[i]
 
-                current_time += timedelta(seconds=interval)
+            coverage_radius_km = alt_km * math.tan(math.radians(fov / 2))
 
-            # 创建FeatureCollection
-            coverage_geojson = geojson.FeatureCollection(all_features)
-            
-            # 保存到文件
-            with open(output_path, "w", encoding="utf-8") as f:
-                json.dump(coverage_geojson, f, ensure_ascii=False, indent=2)
-            
-            results[output_path] = f"成功: {name} 生成 {observation_count} 个观测点"
-            
-        except Exception as e:
-            results[output_path] = f"错误: {tle_str[:20]}... - {str(e)}"
-    
-    return results
+            local_proj = Proj(proj='aeqd', lat_0=lat, lon_0=lon)
+            wgs84_proj = Proj('epsg:4326')
+
+            to_local_transformer = Transformer.from_proj(wgs84_proj, local_proj, always_xy=True)
+            from_local_transformer = Transformer.from_proj(local_proj, wgs84_proj, always_xy=True)
+
+            center_point_local = transform(to_local_transformer.transform, Point(lon, lat))
+            buffer_local = center_point_local.buffer(coverage_radius_km * 1000)
+
+            footprint_polygon_geom = transform(from_local_transformer.transform, buffer_local)
+
+            feature = geojson.Feature(
+                geometry=mapping(footprint_polygon_geom),
+                properties={"satellite": name, "timestamp": time_points[i].isoformat()}
+            )
+            all_features.append(feature)
+
+    return geojson.FeatureCollection(all_features)
 
 
 if __name__ == '__main__':
-    tle = """ISS (ZARYA)             
-    1 25544U 98067A   25073.85652051  .00016840  00000+0  30216-3 0  9992
-    2 25544  51.6358  54.2440 0006407  21.9595 338.1668 15.50010161500535"""
+    # --- 1. 定义包含所有卫星TLE的字典 ---
+    tle_data_dict = {
+        "LANDSAT 9": "1 49260U 21088A   25225.90087331  .00000343  00000-0  86120-4 0  9998\n2 49260  98.2240 295.6621 0001152  92.7233 267.4097 14.57102349206250",
+        "LANDSAT 8": "1 39084U 13008A   25225.93518726  .00000330  00000-0  83304-4 0  9991\n2 39084  98.2219 295.6904 0001221  90.8808 269.2530 14.57106224653150",
+        "LANDSAT 7": "1 25682U 99020A   25225.96558631  .00000447  00000-0  94797-4 0  9997\n2 25682  97.8629 238.7471 0001408  78.5884 338.4838 14.63487946400903",
+        "SENTINEL 2A": "1 40697U 15028A   25225.66220237  .00000108  00000-0  57680-4 0  9995\n2 40697  98.5664 299.9242 0001176  96.3963 263.7354 14.30826489529757",
+        "SENTINEL 2B": "1 42063U 17013A   25225.93481032  .00000105  00000-0  56678-4 0  9995\n2 42063  98.5667 300.1355 0001261  95.8035 264.3292 14.30816795440702",
+        "GAOFEN 6": "1 43484U 18048A   25225.89293148  .00000671  00000-0  10323-3 0  9990\n2 43484  97.8191 294.0983 0013707  87.9596 272.3184 14.76540806388048",
+        "GAOFEN 1": "1 39150U 13018A   25225.93920346  .00000655  00000-0  10102-3 0  9996\n2 39150  97.9464 298.6386 0017702 171.2539 188.8983 14.76544463662908",
+        "GAOFEN 1-02": "1 43259U 18031A   25225.89168981  .00000725  00000-0  11078-3 0  9996\n2 43259  97.7680 284.7617 0003750 264.3203  95.7580 14.76606704397354",
+        "GAOFEN 1-03": "1 43260U 18031B   25225.93764942  .00000729  00000-0  11133-3 0  9998\n2 43260  97.7673 284.6950 0004656 311.5203  48.5607 14.76597261397351",
+        "GAOFEN 1-04": "1 43262U 18031D   25225.91328914  .00000762  00000-0  11606-3 0  9995\n2 43262  97.7683 284.8258 0000988 345.8113  14.3069 14.76592202397343",
+        "ZY-1 02E": "1 50465U 21131A   25225.87772090  .00000088  00000-0  45734-4 0  9997\n2 50465  98.4746 304.0172 0000690  26.8277 333.2944 14.35385677190337",
+        "ZY-1 02D": "1 44528U 19059A   25225.87992434  .00000114  00000-0  54421-4 0  9995\n2 44528  98.3636 292.5392 0001232  21.9608 338.1630 14.35428680310252",
+        "HJ-2F": "1 57519U 23116A   25225.95114683  .00009067  00000-0  38847-3 0  9998\n2 57519  97.3875 231.8057 0003349  45.7676 314.3835 15.22989263112039",
+        "HJ-2E": "1 54035U 22132A   25225.91830765  .00009062  00000-0  38767-3 0  9993\n2 54035  97.3819 231.1366 0006806  21.0137 339.1378 15.23025509157696",
+        "HJ-2B": "1 46479U 20067B   25225.94525504  .00000704  00000-0  10824-3 0  9994\n2 46479  97.9164 306.9150 0000744  73.7489 286.3803 14.76529418262923",
+        "HJ-2A": "1 46478U 20067A   25225.90911622  .00000719  00000-0  11039-3 0  9994\n2 46478  97.9112 306.0764 0003417 141.3878 218.7577 14.76528696262914"
+    }
 
-    print(get_coverage_lace(tle, "2025-03-04 12:00:00.000", "2025-03-04 12:30:00.000"))
+    # --- 2. 设置计算参数 ---
+    # 计算2025年8月1日一整天的覆盖范围
+    start_time = "2025-08-01 00:00:00.000"
+    end_time = "2025-08-01 23:59:59.000"
+    # 可以根据需要调整FOV和时间间隔
+    field_of_view = 10.0  # 10度的视场角
+    time_interval = 600   # 每10分钟计算一次
+
+    print(f"--- 开始计算 {len(tle_data_dict)} 颗卫星的覆盖范围 ---")
+    print(f"时间范围: {start_time} to {end_time}")
+
+    # --- 3. 调用函数并获取结果 ---
+    coverage_geojson = get_coverage_lace(
+        tle_dict=tle_data_dict,
+        start_time_str=start_time,
+        end_time_str=end_time,
+        fov=field_of_view,
+        interval_seconds=time_interval
+    )
+
+    print(f"\n--- 计算完成，总共生成了 {len(coverage_geojson['features'])} 个足迹。 ---")
+
+    # --- 4. 将结果保存到文件 ---
+    output_filename = "../satellite_coverage_2025-08-01.geojson"
+    try:
+        with open(output_filename, 'w') as f:
+            geojson.dump(coverage_geojson, f, indent=2)
+        print(f"✅ 结果已成功保存到文件: {output_filename}")
+    except Exception as e:
+        print(f"❌ 保存文件时出错: {e}")

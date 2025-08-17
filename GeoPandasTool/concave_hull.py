@@ -1,6 +1,7 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def concave_hull(geojson_str, alpha=0.05):
     """
@@ -30,7 +31,7 @@ def concave_hull(geojson_str, alpha=0.05):
     if not concave_hull_gseries.is_empty:  # 仅保留非空对象
         concave_hull_features.append({
             "type": "Feature",
-            "geometry": json.loads(concave_hull_gseries.to_json()),
+            "geometry": mapping(concave_hull_gseries),
             "properties": {}  # 可根据需要添加属性
         })
 

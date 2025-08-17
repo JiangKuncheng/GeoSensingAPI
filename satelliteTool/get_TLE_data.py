@@ -39,7 +39,9 @@ def get_tle(satellite_names: Union[str, List[str]]) -> Union[str, Dict[str, str]
 
     return results[satellite_names] if is_single else results
 
-# 示例用法
-# satellite_name = "ISS (ZARYA)"  # 可以更换为任意卫星名称
-# tle_data = get_tle(satellite_name)
-# print(tle_data)
+
+if __name__ == '__main__':
+    # 示例用法
+    satellite_name = "ISS (ZARYA)"  # 可以更换为任意卫星名称
+    tle_data = get_tle(satellite_name)
+    print(tle_data)

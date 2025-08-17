@@ -1,6 +1,7 @@
 import geopandas as gpd
 import json
 from shapely.geometry import shape
+from shapely.geometry import mapping
 
 def convex_hull(geojson_str):
     """
@@ -29,7 +30,7 @@ def convex_hull(geojson_str):
     if not convex_hull_gseries.is_empty:  # 仅保留非空对象
         convex_hull_features.append({
             "type": "Feature",
-            "geometry": json.loads(convex_hull_gseries.to_json()),
+            "geometry": mapping(convex_hull_gseries),
             "properties": {}  # 可根据需要添加属性
         })
 
