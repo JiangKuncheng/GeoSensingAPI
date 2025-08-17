@@ -1,70 +1,132 @@
 import geojson
+import json
+import os
 from skyfield.api import load, EarthSatellite
 from datetime import datetime, timedelta
 import math
+from typing import List, Dict, Union
 
 
-def get_coverage_lace(multiInvocation=False, times=1, *args):
+def get_coverage_lace(satellite_configs: Union[Dict, List[Dict]]) -> Dict[str, str]:
     """
-    计算卫星视场角覆盖的地面区域并返回 GeoJSON 格式。
+    计算卫星视场角覆盖的地面区域并保存为 GeoJSON 文件。
 
-    :param multiInvocation: 是否进行多次调用，默认 False
-    :param times: 调用次数（当 multiInvocation 为 True 时生效）
-    :param args: 变长参数，每组参数包括（tle_str, start_time_str, end_time_str, interval, fov）
-    :return: GeoJSON 格式的覆盖区域数据
+    参数:
+        satellite_configs (Union[Dict, List[Dict]]): 
+            单个卫星配置字典或配置字典列表，每个配置包含：
+            {
+                "tle_str": "TLE数据字符串",
+                "start_time_str": "开始时间",
+                "end_time_str": "结束时间", 
+                "interval": 时间间隔(秒),
+                "fov": 视场角(度),
+                "output_path": "输出文件路径"
+            }
+
+    返回:
+        Dict[str, str]: 键为output_path，值为处理结果状态
     """
+    # 确保data目录存在
+    os.makedirs("data", exist_ok=True)
+    
     ts = load.timescale()
-    all_features = []
+    
+    # 统一处理为列表格式
+    configs = [satellite_configs] if isinstance(satellite_configs, dict) else satellite_configs
+    
+    results = {}
 
-    if multiInvocation:
-        if len(args) != times * 5:
-            raise ValueError("参数数量与 times 指定的次数不匹配")
+    for config in configs:
+        tle_str = config["tle_str"]
+        start_time_str = config["start_time_str"] 
+        end_time_str = config["end_time_str"]
+        interval = config["interval"]
+        fov = config["fov"]
+        output_path = config["output_path"]
+        try:
+            all_features = []
+            
+            lines = tle_str.strip().split('\n')
+            name = lines[0].strip()
+            tle_line1 = lines[1].strip()
+            tle_line2 = lines[2].strip()
 
-        param_sets = [args[i:i + 5] for i in range(0, len(args), 5)]
-    else:
-        if len(args) != 5:
-            raise ValueError("单次调用时需要提供 5 个参数")
-        param_sets = [args]
+            satellite = EarthSatellite(tle_line1, tle_line2, name, ts)
 
-    for tle_str, start_time_str, end_time_str, interval, fov in param_sets:
-        lines = tle_str.strip().split('\n')
-        name = lines[0].strip()
-        tle_line1 = lines[1].strip()
-        tle_line2 = lines[2].strip()
+            start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S.%f")
+            end_time = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S.%f")
 
-        satellite = EarthSatellite(tle_line1, tle_line2, name, ts)
+            current_time = start_time
+            observation_count = 0
+            
+            while current_time <= end_time:
+                t = ts.utc(current_time.year, current_time.month, current_time.day,
+                           current_time.hour, current_time.minute, current_time.second)
+                geocentric = satellite.at(t)
+                subpoint = geocentric.subpoint()
+                lon, lat = subpoint.longitude.degrees, subpoint.latitude.degrees
 
-        start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S.%f")
-        end_time = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S.%f")
+                # 计算视场角形成的覆盖区域（改进算法）
+                # 地球半径 6371km，将视场角转换为地表覆盖半径
+                earth_radius = 6371.0
+                satellite_altitude = geocentric.distance().km - earth_radius
+                
+                # 根据卫星高度和视场角计算地表覆盖半径
+                if satellite_altitude > 0:
+                    coverage_radius_deg = math.degrees(math.atan(
+                        satellite_altitude * math.tan(math.radians(fov / 2)) / earth_radius
+                    ))
+                else:
+                    coverage_radius_deg = fov / 111.0  # 简单近似：1度约111km
+                
+                # 生成覆盖区域多边形（圆形近似）
+                circle_points = []
+                for angle in range(0, 361, 15):  # 每15度一个点，减少数据量
+                    angle_rad = math.radians(angle)
+                    point_lon = lon + coverage_radius_deg * math.cos(angle_rad)
+                    point_lat = lat + coverage_radius_deg * math.sin(angle_rad)
+                    
+                    # 确保经纬度在有效范围内
+                    point_lon = max(-180, min(180, point_lon))
+                    point_lat = max(-90, min(90, point_lat))
+                    
+                    circle_points.append([point_lon, point_lat])
+                
+                # 闭合多边形
+                circle_points.append(circle_points[0])
 
-        current_time = start_time
-        while current_time <= end_time:
-            t = ts.utc(current_time.year, current_time.month, current_time.day,
-                       current_time.hour, current_time.minute, current_time.second)
-            geocentric = satellite.at(t)
-            subpoint = geocentric.subpoint()
-            lon, lat = subpoint.longitude.degrees, subpoint.latitude.degrees
+                coverage_polygon = geojson.Polygon([circle_points])
 
-            # 计算视场角形成的覆盖区域（近似圆形）
-            coverage_radius = 6371 * math.radians(fov / 2)  # 近似计算地表覆盖半径（km）
+                feature = geojson.Feature(
+                    geometry=coverage_polygon,
+                    properties={
+                        "satellite": name,
+                        "timestamp": current_time.isoformat(),
+                        "observation_id": observation_count,
+                        "satellite_altitude_km": satellite_altitude,
+                        "coverage_radius_deg": coverage_radius_deg,
+                        "longitude": lon,
+                        "latitude": lat
+                    }
+                )
+                all_features.append(feature)
+                observation_count += 1
 
-            coverage_polygon = geojson.Polygon([
-                [
-                    (lon + coverage_radius * math.cos(math.radians(angle)),
-                     lat + coverage_radius * math.sin(math.radians(angle)))
-                    for angle in range(0, 361, 10)
-                ]
-            ])
+                current_time += timedelta(seconds=interval)
 
-            feature = geojson.Feature(
-                geometry=coverage_polygon,
-                properties={"satellite": name, "timestamp": current_time.isoformat()}
-            )
-            all_features.append(feature)
-
-            current_time += timedelta(seconds=interval)
-
-    return geojson.FeatureCollection(all_features)
+            # 创建FeatureCollection
+            coverage_geojson = geojson.FeatureCollection(all_features)
+            
+            # 保存到文件
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(coverage_geojson, f, ensure_ascii=False, indent=2)
+            
+            results[output_path] = f"成功: {name} 生成 {observation_count} 个观测点"
+            
+        except Exception as e:
+            results[output_path] = f"错误: {tle_str[:20]}... - {str(e)}"
+    
+    return results
 
 
 if __name__ == '__main__':
