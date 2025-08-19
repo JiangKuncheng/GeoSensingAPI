@@ -1,41 +1,63 @@
 import geopandas as gpd
 import json
+import os
+from typing import Union, List, Dict
 from shapely.geometry import shape
 
 
-def boundary(*geojson_strs, multiInvocation=False, times=1):
+def boundary(geojson_names: Union[str, List[str]]) -> Union[str, Dict[str, str]]:
     """
-    计算一个或多个 Overpass API 导出的 GeoJSON 的边界
+    计算一个或多个 GeoJSON 文件的边界并保存为文件
 
     参数:
-        *geojson_strs (str): 一个或多个 GeoJSON 字符串
-        multiInvocation (bool): 是否启用多次调用模式
-        times (int): 如果启用多次调用模式，指定 GeoJSON 的数量
+        geojson_names (Union[str, List[str]]):
+            - 单个 GeoJSON 文件名（不含路径和扩展名）
+            - 或多个文件名组成的列表
 
     返回:
-        list[geopandas.GeoSeries] | geopandas.GeoSeries:
-            如果 multiInvocation 为 True，返回每个 GeoJSON 的边界列表；
-            否则返回单个 GeoJSON 的边界 GeoSeries。
+        Union[str, Dict[str, str]]:
+            - 如果传入单个名称，返回对应的输出文件名
+            - 如果传入多个名称，返回字典，键为输入文件名，值为对应输出文件名
     """
-    if multiInvocation:
-        if len(geojson_strs) != times:
-            raise ValueError("提供的 GeoJSON 数量与 times 参数不匹配")
+    # 如果是单个字符串，转为列表处理
+    is_single = isinstance(geojson_names, str)
+    names = [geojson_names] if is_single else geojson_names
+    results = {}
 
-        boundaries = []
-        for geojson_str in geojson_strs:
-            geojson = json.loads(geojson_str)
-            geometries = _extract_geometries(geojson)
-            gseries = gpd.GeoSeries(geometries)
-            boundaries.append(gseries.boundary)
-        return boundaries
-    else:
-        if len(geojson_strs) != 1:
-            raise ValueError("未启用 multiInvocation 时仅能传入一个 GeoJSON")
-
-        geojson = json.loads(geojson_strs[0])
-        geometries = _extract_geometries(geojson)
+    for name in names:
+        input_path = os.path.join("geojson", f"{name}.geojson")
+        output_name = f"{name}_boundary"
+        output_path = os.path.join("geojson", f"{output_name}.geojson")
+        
+        with open(input_path, "r", encoding="utf-8") as f:
+            geojson_data = json.load(f)
+        
+        geometries = _extract_geometries(geojson_data)
         gseries = gpd.GeoSeries(geometries)
-        return gseries.boundary
+        boundary_geoms = gseries.boundary
+        
+        # 转换为 GeoJSON 并保存
+        boundary_features = []
+        for geom in boundary_geoms:
+            if not geom.is_empty:
+                boundary_features.append({
+                    "type": "Feature",
+                    "geometry": json.loads(geom.to_json()),
+                    "properties": {}
+                })
+        
+        boundary_geojson = {
+            "type": "FeatureCollection",
+            "features": boundary_features
+        }
+        
+        # 保存到文件
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(boundary_geojson, f, ensure_ascii=False, indent=2)
+        
+        results[name] = output_name
+
+    return results[geojson_names] if is_single else results
 
 
 def _extract_geometries(geojson):

@@ -37,29 +37,37 @@ class WuhanSatelliteObservationPlanner:
         return True
     
     def define_wuhan_area(self):
-        """定义武汉市区域"""
-        print("正在定义武汉市区域...")
+        """定义武汉市区域 - 使用硬编码的外接矩形"""
+        print("正在定义武汉市外接矩形...")
+        
+        # 武汉市的真实外接矩形坐标
+        # 经度范围: 113.68°E - 115.05°E
+        # 纬度范围: 29.58°N - 31.35°N
         self.wuhan_geojson = {
             "type": "FeatureCollection",
             "features": [{
                 "type": "Feature",
-                "properties": {"name": "武汉市"},
+                "properties": {"name": "武汉市外接矩形"},
                 "geometry": {
                     "type": "Polygon",
                     "coordinates": [[
-                        [114.0, 30.0],
-                        [114.8, 30.0],
-                        [114.8, 30.8],
-                        [114.0, 30.8],
-                        [114.0, 30.0]
+                        [113.68, 29.58],  # 西南角
+                        [115.05, 29.58],  # 东南角
+                        [115.05, 31.35],  # 东北角
+                        [113.68, 31.35],  # 西北角
+                        [113.68, 29.58]   # 闭合
                     ]]
                 }
             }]
         }
-        print("✅ 武汉市区域定义完成")
-        print(f"   区域范围: 经度 114.0°E - 114.8°E, 纬度 30.0°N - 30.8°N")
+        
+        print("✅ 武汉市外接矩形定义完成")
+        print(f"   经度范围: 113.68°E - 115.05°E")
+        print(f"   纬度范围: 29.58°N - 31.35°N")
+        print(f"   总面积: 约 {(115.05-113.68) * (31.35-29.58):.3f} 平方度")
+        return True
     
-    def get_satellite_footprints(self, start_time, end_time, fov=10.0, interval_seconds=600):
+    def get_satellite_footprints(self, start_time, end_time, fov=20.0, interval_seconds=600):
         """获取所有卫星的覆盖足迹"""
         print(f"\n正在获取卫星覆盖足迹...")
         print(f"时间窗口: {start_time} 到 {end_time}")
@@ -140,7 +148,7 @@ class WuhanSatelliteObservationPlanner:
         print(f"\n✅ 筛选完成，找到 {len(intersecting_satellites)} 颗与武汉市相交的卫星")
         return intersecting_satellites
     
-    def calculate_coverage_for_satellites(self, intersecting_satellites, start_time, end_time, fov=10.0, interval_seconds=600):
+    def calculate_coverage_for_satellites(self, intersecting_satellites, start_time, end_time, fov=20.0, interval_seconds=600):
         """计算每个相交卫星的覆盖率"""
         print(f"\n正在计算卫星覆盖率...")
         
@@ -250,7 +258,7 @@ class WuhanSatelliteObservationPlanner:
         
         return min(adjusted_coverage, 1.0)
     
-    def generate_observation_plan(self, start_time, end_time, fov=10.0, interval_seconds=600):
+    def generate_observation_plan(self, start_time, end_time, fov=20.0, interval_seconds=600):
         """生成完整的观测规划"""
         print("=" * 80)
         print("武汉市卫星观测规划生成器")
@@ -260,7 +268,8 @@ class WuhanSatelliteObservationPlanner:
         if not self.load_tle_data():
             return None
         
-        self.define_wuhan_area()
+        if not self.define_wuhan_area():
+            return None
         
         # 2. 获取卫星足迹
         coverage_geojson = self.get_satellite_footprints(start_time, end_time, fov, interval_seconds)
@@ -320,7 +329,7 @@ def main():
     results = planner.generate_observation_plan(
         start_time=start_time,
         end_time=end_time,
-        fov=10.0,  # 10度视场角
+        fov=20.0,  # 30度视场角
         interval_seconds=600  # 10分钟间隔
     )
     

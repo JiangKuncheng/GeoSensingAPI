@@ -1,0 +1,41 @@
+{
+  "planning_period": {
+    "start_time": "2025-08-01 00:00:00.000",
+    "end_time": "2025-08-10 23:59:59.000"
+  },
+  "target_area": "武汉市",
+  "total_satellites": 16,
+  "intersecting_satellites": [
+    "GAOFEN 1-03",
+    "HJ-2E",
+    "HJ-2A",
+    "LANDSAT 9",
+    "LANDSAT 8",
+    "LANDSAT 7",
+    "SENTINEL 2A",
+    "SENTINEL 2B",
+    "GAOFEN 6",
+    "GAOFEN 1-02"
+  ],
+  "coverage_results": {
+    "GAOFEN 1-03": 0.7389695660046467,
+    "HJ-2E": 0.07592801132736703,
+    "HJ-2A": 0.06295823799003153,
+    "LANDSAT 9": 0.5637872591599954,
+    "LANDSAT 8": 0.45665265976894565,
+    "LANDSAT 7": 0.056403920778786656,
+    "SENTINEL 2A": 0.6172492890973208,
+    "SENTINEL 2B": 0.13061276888199996,
+    "GAOFEN 1-02": 0.5007879306666456
+  },
+  "optimal_plan": {
+    "type": "combination",
+    "satellites": [
+      "GAOFEN 1-03",
+      "SENTINEL 2A"
+    ],
+    "coverage": 1.0,
+    "description": "使用卫星组合 GAOFEN 1-03, SENTINEL 2A 可达到 100.00% 的覆盖率"
+  },
+  "generation_time": "2025-08-17T12:21:40.277433"
+}

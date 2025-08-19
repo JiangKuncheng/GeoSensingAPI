@@ -1,41 +1,33 @@
 import geopandas as gpd
 import json
 import os
+from typing import Union, List, Dict
 from shapely.geometry import shape, box
 
-def bounds(multiInvocation=False, times=1, *args):
+def bounds(geojson_names: Union[str, List[str]]) -> Union[str, Dict[str, str]]:
     """
-    计算 GeoJSON 文件的边界包围盒，支持多调用模式，并保存为GeoJSON格式。
-
-    单次调用:
-        bounds(False, 1, input_path, output_path)
-    
-    多次调用:
-        bounds(True, 2, input_path1, output_path1, input_path2, output_path2)
+    计算一个或多个 GeoJSON 文件的边界包围盒并保存为文件
 
     参数:
-        multiInvocation (bool): 是否进行多次调用
-        times (int): 调用次数（当 multiInvocation 为 True 时生效）
-        args: 变长参数，每组参数包括 (input_path, output_path)
+        geojson_names (Union[str, List[str]]):
+            - 单个 GeoJSON 文件名（不含路径和扩展名）
+            - 或多个文件名组成的列表
 
     返回:
-        list: 每次调用的结果状态
+        Union[str, Dict[str, str]]:
+            - 如果传入单个名称，返回对应的输出文件名
+            - 如果传入多个名称，返回字典，键为输入文件名，值为对应输出文件名
     """
-    # 确保data目录存在
-    os.makedirs("data", exist_ok=True)
+    # 如果是单个字符串，转为列表处理
+    is_single = isinstance(geojson_names, str)
+    names = [geojson_names] if is_single else geojson_names
+    results = {}
     
-    if multiInvocation:
-        if len(args) != times * 2:
-            raise ValueError(f"多次调用时参数数量应为 {times * 2}，实际为 {len(args)}")
-        param_sets = [args[i:i + 2] for i in range(0, len(args), 2)]
-    else:
-        if len(args) != 2:
-            raise ValueError("单次调用时需要提供 2 个参数：input_path, output_path")
-        param_sets = [args]
-
-    results = []
-    
-    for input_path, output_path in param_sets:
+    for name in names:
+        input_path = os.path.join("geojson", f"{name}.geojson")
+        output_name = f"{name}_bounds"
+        output_path = os.path.join("geojson", f"{output_name}.geojson")
+        
         try:
             # 读取输入GeoJSON文件
             with open(input_path, "r", encoding="utf-8") as f:
@@ -72,12 +64,12 @@ def bounds(multiInvocation=False, times=1, *args):
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(bounds_geojson, f, ensure_ascii=False, indent=2)
             
-            results.append(f"成功: {input_path} -> {output_path}")
+            results[name] = output_name
             
         except Exception as e:
-            results.append(f"错误: {input_path} - {str(e)}")
+            results[name] = f"Error: {str(e)}"
     
-    return results
+    return results[geojson_names] if is_single else results
 
 
 def _extract_geometries(geojson):
