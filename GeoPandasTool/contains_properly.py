@@ -1,32 +1,58 @@
 import geopandas as gpd
 import json
+import os
+from typing import Union, List, Dict
 from shapely.geometry import shape
 
-def contains_properly(geojson_str, other_geojson_str):
+def contains_properly(geojson_names: Union[str, List[str]], other_geojson_name: str) -> Union[bool, Dict[str, bool]]:
     """
-    判断 Overpass API 获取的 GeoJSON 中的几何对象是否正确地包含另一个几何对象
+    判断一个或多个 GeoJSON 文件中的几何对象是否正确地包含另一个 GeoJSON 文件中的几何对象
 
     参数:
-        geojson_str (str): 主 GeoJSON 字符串
-        other_geojson_str (str): 目标 GeoJSON 字符串，判断主几何是否正确包含该几何
+        geojson_names (Union[str, List[str]]):
+            - 单个 GeoJSON 文件名（不含路径和扩展名）
+            - 或多个文件名组成的列表
+        other_geojson_name (str): 目标 GeoJSON 文件名，判断主几何是否正确包含该几何
 
     返回:
-        list: 每个 geometry 是否正确包含目标 geometry 的布尔值
+        Union[bool, Dict[str, bool]]:
+            - 如果传入单个名称，返回对应的布尔值结果
+            - 如果传入多个名称，返回字典，键为输入文件名，值为对应布尔值结果
     """
-    # 解析 geojson
-    geojson = json.loads(geojson_str)
-    other_geojson = json.loads(other_geojson_str)
+    # 如果是单个字符串，转为列表处理
+    is_single = isinstance(geojson_names, str)
+    names = [geojson_names] if is_single else geojson_names
+    results = {}
 
-    # 提取几何对象
-    geometries = [shape(feature["geometry"]) for feature in geojson["features"]]
-    other_geometries = [shape(feature["geometry"]) for feature in other_geojson["features"]]
+    # 读取目标 GeoJSON 文件
+    other_path = os.path.join("geojson", f"{other_geojson_name}.geojson")
+    with open(other_path, "r", encoding="utf-8") as f:
+        other_geojson_data = json.load(f)
+    other_geometries = [shape(feature["geometry"]) for feature in other_geojson_data["features"]]
 
-    # 构建 GeoSeries
-    gseries = gpd.GeoSeries(geometries)
+    for name in names:
+        input_path = os.path.join("geojson", f"{name}.geojson")
+        
+        try:
+            # 读取输入GeoJSON文件
+            with open(input_path, "r", encoding="utf-8") as f:
+                geojson_data = json.load(f)
 
-    # 检查是否正确包含
-    result = []
-    for geometry in gseries:
-        result.append(all(geometry.contains_properly(other_geometry) for other_geometry in other_geometries))
+            # 提取几何对象
+            geometries = [shape(feature["geometry"]) for feature in geojson_data["features"]]
 
-    return result
+            # 构建 GeoSeries
+            gseries = gpd.GeoSeries(geometries)
+
+            # 检查是否正确包含
+            result = []
+            for geometry in gseries:
+                result.append(all(geometry.contains_properly(other_geometry) for other_geometry in other_geometries))
+
+            # 返回整体结果（所有几何对象都正确包含目标几何）
+            results[name] = all(result)
+            
+        except Exception as e:
+            results[name] = f"Error: {str(e)}"
+
+    return results[geojson_names] if is_single else results

@@ -1,9 +1,5 @@
 import json
 import numpy as np
-from datetime import datetime, timedelta
-import geojson
-from shapely.geometry import shape
-from shapely.ops import unary_union
 
 # 导入您已经写好的函数
 from satelliteTool.get_observation_lace import get_coverage_lace
@@ -114,7 +110,7 @@ def calculate_doci_for_task(sensor_properties, task_requirements, all_sensors):
 	tle_dict = {name: sensor_properties['tle_str']}
 	
 	# 首先使用get_observation_lace获取卫星足迹
-	coverage_geojson = get_coverage_lace(
+	coverage_dict = get_coverage_lace(
 		tle_dict=tle_dict,
 		start_time_str=task_requirements['start_time'],
 		end_time_str=task_requirements['end_time'],
@@ -133,9 +129,22 @@ def calculate_doci_for_task(sensor_properties, task_requirements, all_sensors):
 	)
 	
 	# 获取覆盖率
-	Co = overlap_results.get(name, 0.0)
-	print(f"    * Coverage (Co) = {Co:.3f}")
-	print(f"    * 生成了 {len(coverage_geojson['features'])} 个足迹点")
+	if name in overlap_results:
+		Co = overlap_results[name]['coverage_ratio']
+		intersection_footprint_count = len(overlap_results[name]['intersection_footprints'])
+		print(f"    * Coverage (Co) = {Co:.3f}")
+		print(f"    * 与研究区域相交的足迹数量: {intersection_footprint_count}")
+	else:
+		Co = 0.0
+		print(f"    * Coverage (Co) = {Co:.3f}")
+		print(f"    * 未生成有效足迹点")
+	
+	# 获取该卫星的足迹数量
+	if name in coverage_dict and coverage_dict[name]['features']:
+		footprint_count = len(coverage_dict[name]['features'])
+		print(f"    * 总足迹数量: {footprint_count}")
+	else:
+		print(f"    * 总足迹数量: 0")
 
 	# 2. Th: Theme
 	relevance = get_theme_relevance_from_oscar(name, task_requirements['theme'])

@@ -1,1 +1,13 @@
 /node_modules/
+ConfigureTool/__pycache__/UAV_GS_planner.cpython-38.pyc
+ConfigureTool/__pycache__/UAV_Planner.cpython-38.pyc
+GeoPandasTool/__pycache__/__init__.cpython-38.pyc
+GeoPandasTool/__pycache__/contains.cpython-38.pyc
+GeoPandasTool/__pycache__/difference.cpython-38.pyc
+GeoPandasTool/__pycache__/intersects.cpython-38.pyc
+GeoPandasTool/__pycache__/is_valid_reason.cpython-38.pyc
+GeoPandasTool/__pycache__/is_valid.cpython-38.pyc
+GeoPandasTool/__pycache__/union.cpython-38.pyc
+satelliteTool/__pycache__/get_observation_lace.cpython-38.pyc
+satelliteTool/__pycache__/get_observation_overlap.cpython-38.pyc
+satelliteTool/__pycache__/get_TLE_data.cpython-38.pyc
