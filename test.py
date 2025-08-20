@@ -1,52 +1,65 @@
-from skyfield.api import load, EarthSatellite
-from datetime import datetime, timedelta
-import geojson
+import folium
+import geopandas
 
 
-def tle_to_geojson(tle_str, start_time_str, end_time_str, interval=10):
-    """
-    计算卫星轨迹投影到地球表面的 GeoJSON
+def create_interactive_map(geojson_file: str, output_html: str):
+	"""
+	读取GeoJSON文件并创建一个交互式的Folium地图。
 
-    :param tle_str: TLE 数据字符串，按格式传入
-    :param start_time_str: 开始时间（格式：YYYY-MM-DD HH:MM:SS.sss）
-    :param end_time_str: 结束时间（格式：YYYY-MM-DD HH:MM:SS.sss）
-    :param interval: 采样间隔（秒）
-    :return: GeoJSON 格式的轨迹数据
-    """
-    ts = load.timescale()
-    lines = tle_str.strip().split('\n')
+	:param geojson_file: 输入的GeoJSON文件路径。
+	:param output_html: 输出的HTML地图文件路径。
+	"""
+	print(f"正在读取地理数据: {geojson_file}")
+	gdf = geopandas.read_file(geojson_file)
 
-    name = lines[0].strip()
-    tle_line1 = lines[1].strip()
-    tle_line2 = lines[2].strip()
+	# --- 核心修复代码 ---
+	# 将Timestamp对象列显式转换为字符串，以确保JSON序列化成功。
+	if 'timestamp' in gdf.columns:
+		gdf['timestamp'] = gdf['timestamp'].astype(str)
+	# --------------------
 
-    satellite = EarthSatellite(tle_line1, tle_line2, name, ts)
+	try:
+		center_lat = gdf.unary_union.centroid.y
+		center_lon = gdf.unary_union.centroid.x
+		m = folium.Map(location=[center_lat, center_lon], zoom_start=2)
+	except Exception:
+		print("无法计算中心点，使用默认全球视图。")
+		m = folium.Map(location=[30, 0], zoom_start=2)
 
-    start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S.%f")
-    end_time = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S.%f")
+	print("正在向地图添加卫星足迹图层...")
 
-    points = []
-    current_time = start_time
-    while current_time <= end_time:
-        t = ts.utc(current_time.year, current_time.month, current_time.day,
-                   current_time.hour, current_time.minute, current_time.second)
-        geocentric = satellite.at(t)
-        subpoint = geocentric.subpoint()
-        points.append((subpoint.longitude.degrees, subpoint.latitude.degrees))
-        current_time += timedelta(seconds=interval)
+	popup = folium.GeoJsonPopup(
+		fields=['satellite', 'timestamp'],
+		aliases=['卫星 (Satellite):', '时间 (Timestamp):'],
+		localize=True,
+		style="background-color: yellow;",
+	)
 
-    # 创建 GeoJSON 线条特征
-    feature = geojson.Feature(
-        geometry=geojson.LineString(points),
-        properties={"satellite": name}
-    )
+	style_function = lambda x: {
+		"fillColor": "#3186cc",
+		"color": "blue",
+		"weight": 1,
+		"fillOpacity": 0.2,
+	}
 
-    return geojson.FeatureCollection([feature])
+	folium.GeoJson(
+		gdf,
+		style_function=style_function,
+		popup=popup,
+		name='卫星覆盖范围 (Satellite Coverage)'
+	).add_to(m)
+
+	folium.LayerControl().add_to(m)
+
+	print(f"正在保存地图到: {output_html}")
+	m.save(output_html)
+	print(f"✅ 地图已成功生成！请在浏览器中打开 '{output_html}' 查看。")
 
 
 if __name__ == '__main__':
-    tle="""ISS (ZARYA)             
-1 25544U 98067A   25073.85652051  .00016840  00000+0  30216-3 0  9992
-2 25544  51.6358  54.2440 0006407  21.9595 338.1668 15.50010161500535"""
+	# 你的GeoJSON文件名
+	input_geojson = "satellite_coverage_2025-08-01.geojson"
+	# 定义输出的HTML文件名
+	output_map_file = "interactive_satellite_map.html"
 
-    print(tle_to_geojson(tle,"2025-03-04 12:00:00.000","2025-03-04 12:30:00.000"))
+	create_interactive_map(input_geojson, output_map_file)
