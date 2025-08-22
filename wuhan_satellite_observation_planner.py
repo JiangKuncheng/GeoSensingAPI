@@ -1,365 +1,310 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+武汉市卫星观测规划器 (精简版)
+功能：分析与武汉市相交的卫星，并规划最优覆盖方案
+"""
+
 import json
-import numpy as np
-from datetime import datetime, timedelta
-import geojson
+from datetime import datetime
+from itertools import combinations
+# 导入必要的地理信息处理库
 from shapely.geometry import shape
-from shapely.ops import unary_union
+from shapely.ops import unary_union, transform
+from pyproj import Proj, Transformer
 
 # 导入您已经写好的工具函数
 from satelliteTool.get_observation_lace import get_coverage_lace
 from satelliteTool.get_observation_overlap import get_observation_overlap
 from GeoPandasTool.intersects import intersects
-from GeoPandasTool.is_valid_reason import is_valid_reason
 from GeoPandasTool.is_valid import is_valid
-from GeoPandasTool.union import union
+import folium
 
 
 class WuhanSatelliteObservationPlanner:
-    """武汉市卫星观测规划器"""
-    
-    def __init__(self):
-        self.tle_data = {}
-        self.wuhan_geojson = None
-        self.coverage_results = {}
-        self.intersection_results = {}
-        self.valid_satellites = []
-        
-    def load_tle_data(self):
-        """加载TLE数据"""
-        print("正在加载TLE数据...")
-        try:
-            with open('satelliteTool/tle_data.json', 'r', encoding='utf-8') as f:
-                self.tle_data = json.load(f)
-            print(f"✅ 成功加载 {len(self.tle_data)} 颗卫星的TLE数据")
-        except Exception as e:
-            print(f"❌ 加载TLE数据失败: {e}")
-            return False
-        return True
-    
-    def define_wuhan_area(self):
-        """定义武汉市区域 - 使用硬编码的外接矩形"""
-        print("正在定义武汉市外接矩形...")
-        
-        # 武汉市的真实外接矩形坐标
-        # 经度范围: 113.68°E - 115.05°E
-        # 纬度范围: 29.58°N - 31.35°N
-        self.wuhan_geojson = {
-            "type": "FeatureCollection",
-            "features": [{
-                "type": "Feature",
-                "properties": {"name": "武汉市外接矩形"},
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [[
-                        [113.68, 29.58],  # 西南角
-                        [115.05, 29.58],  # 东南角
-                        [115.05, 31.35],  # 东北角
-                        [113.68, 31.35],  # 西北角
-                        [113.68, 29.58]   # 闭合
-                    ]]
-                }
-            }]
-        }
-        
-        print("✅ 武汉市外接矩形定义完成")
-        print(f"   经度范围: 113.68°E - 115.05°E")
-        print(f"   纬度范围: 29.58°N - 31.35°N")
-        print(f"   总面积: 约 {(115.05-113.68) * (31.35-29.58):.3f} 平方度")
-        return True
-    
-    def get_satellite_footprints(self, start_time, end_time, fov=20.0, interval_seconds=600):
-        """获取所有卫星的覆盖足迹"""
-        print(f"\n正在获取卫星覆盖足迹...")
-        print(f"时间窗口: {start_time} 到 {end_time}")
-        print(f"视场角: {fov}°, 时间间隔: {interval_seconds}秒")
-        
-        try:
-            coverage_geojson = get_coverage_lace(
-                tle_dict=self.tle_data,
-                start_time_str=start_time,
-                end_time_str=end_time,
-                fov=fov,
-                interval_seconds=interval_seconds
-            )
-            
-            print(f"✅ 成功生成 {len(coverage_geojson['features'])} 个足迹点")
-            return coverage_geojson
-            
-        except Exception as e:
-            print(f"❌ 获取卫星足迹失败: {e}")
-            return None
-    
-    def filter_intersecting_satellites(self, coverage_geojson):
-        """筛选与武汉市相交的卫星"""
-        print("\n正在筛选与武汉市相交的卫星...")
-        
-        if not coverage_geojson or not coverage_geojson.get('features'):
-            print("❌ 没有可用的覆盖足迹数据")
-            return []
-        
-        # 将武汉市GeoJSON转换为字符串格式
-        wuhan_geojson_str = json.dumps(self.wuhan_geojson)
-        
-        # 按卫星分组足迹
-        satellite_footprints = {}
-        for feature in coverage_geojson['features']:
-            satellite_name = feature['properties']['satellite']
-            if satellite_name not in satellite_footprints:
-                satellite_footprints[satellite_name] = []
-            satellite_footprints[satellite_name].append(feature)
-        
-        # 检查每个卫星是否与武汉市相交
-        intersecting_satellites = []
-        
-        for satellite_name, footprints in satellite_footprints.items():
-            print(f"  检查卫星: {satellite_name}")
-            
-            # 合并该卫星的所有足迹为一个GeoJSON
-            merged_footprint = {
-                "type": "FeatureCollection",
-                "features": footprints
-            }
-            merged_footprint_str = json.dumps(merged_footprint)
-            
-            try:
-                # 使用intersects工具检查是否相交
-                intersection_results = intersects(merged_footprint_str, wuhan_geojson_str)
-                
-                # 检查是否有任何足迹与武汉市相交
-                if any(intersection_results):
-                    intersecting_satellites.append(satellite_name)
-                    print(f"    ✅ 与武汉市相交")
-                    
-                    # 检查几何有效性
-                    validity_results = is_valid(merged_footprint_str)
-                    if not all(validity_results):
-                        print(f"    ⚠️  部分几何图形无效，正在检查原因...")
-                        validity_reasons = is_valid_reason(merged_footprint_str)
-                        for i, reason in enumerate(validity_reasons):
-                            if not validity_results[i]:
-                                print(f"      足迹 {i+1}: {reason}")
-                else:
-                    print(f"    ❌ 不与武汉市相交")
-                    
-            except Exception as e:
-                print(f"    ❌ 检查相交性时出错: {e}")
-                continue
-        
-        print(f"\n✅ 筛选完成，找到 {len(intersecting_satellites)} 颗与武汉市相交的卫星")
-        return intersecting_satellites
-    
-    def calculate_coverage_for_satellites(self, intersecting_satellites, start_time, end_time, fov=20.0, interval_seconds=600):
-        """计算每个相交卫星的覆盖率"""
-        print(f"\n正在计算卫星覆盖率...")
-        
-        if not intersecting_satellites:
-            print("❌ 没有相交的卫星")
-            return {}
-        
-        # 创建只包含相交卫星的TLE字典
-        filtered_tle_dict = {name: self.tle_data[name] for name in intersecting_satellites if name in self.tle_data}
-        
-        try:
-            coverage_results = get_observation_overlap(
-                tle_dict=filtered_tle_dict,
-                start_time_str=start_time,
-                end_time_str=end_time,
-                target_geojson=self.wuhan_geojson,
-                fov=fov,
-                interval_seconds=interval_seconds
-            )
-            
-            print(f"✅ 覆盖率计算完成")
-            for satellite, coverage in coverage_results.items():
-                print(f"   {satellite}: {coverage:.2%}")
-            
-            return coverage_results
-            
-        except Exception as e:
-            print(f"❌ 计算覆盖率失败: {e}")
-            return {}
-    
-    def find_optimal_coverage_plan(self, coverage_results, target_coverage=0.9):
-        """寻找最优覆盖方案"""
-        print(f"\n正在寻找最优覆盖方案...")
-        print(f"目标覆盖率: {target_coverage:.1%}")
-        
-        if not coverage_results:
-            print("❌ 没有可用的覆盖率数据")
-            return None
-        
-        # 检查是否有单个卫星能达到目标覆盖率
-        single_satellite_solutions = []
-        for satellite, coverage in coverage_results.items():
-            if coverage >= target_coverage:
-                single_satellite_solutions.append((satellite, coverage))
-        
-        if single_satellite_solutions:
-            # 选择覆盖率最高的单个卫星
-            best_single = max(single_satellite_solutions, key=lambda x: x[1])
-            print(f"✅ 找到单个卫星解决方案:")
-            print(f"   卫星: {best_single[0]}")
-            print(f"   覆盖率: {best_single[1]:.2%}")
-            return {
-                'type': 'single',
-                'satellites': [best_single[0]],
-                'coverage': best_single[1],
-                'description': f"使用单颗卫星 {best_single[0]} 即可达到 {best_single[1]:.2%} 的覆盖率"
-            }
-        
-        # 如果没有单个卫星能达到目标，寻找组合方案
-        print("   没有单个卫星能达到目标覆盖率，正在寻找组合方案...")
-        
-        # 按覆盖率降序排列
-        sorted_satellites = sorted(coverage_results.items(), key=lambda x: x[1], reverse=True)
-        
-        # 尝试不同的组合
-        best_combination = None
-        best_coverage = 0
-        
-        # 尝试2-3颗卫星的组合
-        for combination_size in range(2, min(4, len(sorted_satellites) + 1)):
-            from itertools import combinations
-            
-            for combo in combinations(sorted_satellites, combination_size):
-                combo_satellites = [sat for sat, _ in combo]
-                combo_coverage = self._calculate_combined_coverage(combo_satellites, coverage_results)
-                
-                if combo_coverage >= target_coverage and combo_coverage > best_coverage:
-                    best_combination = combo_satellites
-                    best_coverage = combo_coverage
-                    print(f"   找到可行组合: {combo_satellites} -> {combo_coverage:.2%}")
-        
-        if best_combination:
-            print(f"✅ 找到最佳组合方案:")
-            print(f"   卫星组合: {', '.join(best_combination)}")
-            print(f"   组合覆盖率: {best_coverage:.2%}")
-            return {
-                'type': 'combination',
-                'satellites': best_combination,
-                'coverage': best_coverage,
-                'description': f"使用卫星组合 {', '.join(best_combination)} 可达到 {best_coverage:.2%} 的覆盖率"
-            }
-        else:
-            print("❌ 无法找到满足要求的卫星组合")
-            return None
-    
-    def _calculate_combined_coverage(self, satellite_list, individual_coverage):
-        """计算卫星组合的覆盖率（简化计算，假设无重叠）"""
-        # 这是一个简化的计算，实际应该考虑卫星足迹的重叠
-        # 这里使用并集的方式计算
-        total_coverage = 0
-        for satellite in satellite_list:
-            total_coverage += individual_coverage.get(satellite, 0)
-        
-        # 简化的重叠处理：假设重叠率为20%
-        overlap_factor = 0.2
-        adjusted_coverage = total_coverage * (1 - overlap_factor)
-        
-        return min(adjusted_coverage, 1.0)
-    
-    def generate_observation_plan(self, start_time, end_time, fov=20.0, interval_seconds=600):
-        """生成完整的观测规划"""
-        print("=" * 80)
-        print("武汉市卫星观测规划生成器")
-        print("=" * 80)
-        
-        # 1. 加载数据
-        if not self.load_tle_data():
-            return None
-        
-        if not self.define_wuhan_area():
-            return None
-        
-        # 2. 获取卫星足迹
-        coverage_geojson = self.get_satellite_footprints(start_time, end_time, fov, interval_seconds)
-        if not coverage_geojson:
-            return None
-        
-        # 3. 筛选相交卫星
-        intersecting_satellites = self.filter_intersecting_satellites(coverage_geojson)
-        if not intersecting_satellites:
-            print("❌ 没有找到与武汉市相交的卫星")
-            return None
-        
-        # 4. 计算覆盖率
-        coverage_results = self.calculate_coverage_for_satellites(
-            intersecting_satellites, start_time, end_time, fov, interval_seconds
-        )
-        
-        # 5. 寻找最优方案
-        optimal_plan = self.find_optimal_coverage_plan(coverage_results)
-        
-        # 6. 生成最终报告
-        final_report = {
-            'planning_period': {
-                'start_time': start_time,
-                'end_time': end_time
-            },
-            'target_area': '武汉市',
-            'total_satellites': len(self.tle_data),
-            'intersecting_satellites': intersecting_satellites,
-            'coverage_results': coverage_results,
-            'optimal_plan': optimal_plan,
-            'generation_time': datetime.now().isoformat()
-        }
-        
-        return final_report
-    
-    def save_results(self, results, filename):
-        """保存结果到文件"""
-        try:
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(results, f, ensure_ascii=False, indent=2)
-            print(f"✅ 结果已保存到: {filename}")
-        except Exception as e:
-            print(f"❌ 保存结果失败: {e}")
+	"""武汉市卫星观测规划器"""
+
+	def __init__(self):
+		self.final_coverage_dict_geom = None
+		self.final_coverage_results_geom = None
+		self.tle_data = {}
+		self.wuhan_geojson = None
+
+	def load_tle_data(self):
+		"""加载TLE数据"""
+		print("正在加载TLE数据...")
+		try:
+			with open('satelliteTool/tle_data.json', 'r', encoding='utf-8') as f:
+				self.tle_data = json.load(f)
+			print(f"✅ 成功加载 {len(self.tle_data)} 颗卫星的TLE数据")
+			return True
+		except Exception as e:
+			print(f"❌ 加载TLE数据失败: {e}")
+			return False
+
+	def define_wuhan_area(self):
+		"""定义武汉市区域"""
+		print("正在定义武汉市区域...")
+		self.wuhan_geojson = {
+			"type": "FeatureCollection",
+			"features": [{
+				"type": "Feature", "properties": {"name": "武汉市"},
+				"geometry": {
+					"type": "Polygon",
+					"coordinates": [[[114.0, 30.0], [114.8, 30.0], [114.8, 30.8], [114.0, 30.8], [114.0, 30.0]]]
+				}
+			}]
+		}
+		print("✅ 武汉市区域定义完成 (经度 114.0°-114.8°, 纬度 30.0°-30.8°)")
+
+	def get_satellite_footprints(self, start_time, end_time, fov=10.0, interval_seconds=600):
+		"""获取所有卫星的覆盖足迹"""
+		print(f"\n正在获取卫星覆盖足迹 (时间: {start_time} 到 {end_time})...")
+		try:
+			coverage_dict = get_coverage_lace(
+				tle_dict=self.tle_data, start_time_str=start_time, end_time_str=end_time,
+				fov=fov, interval_seconds=interval_seconds
+			)
+			total_features = sum(len(geojson['features']) for geojson in coverage_dict.values())
+			print(f"✅ 成功生成 {total_features} 个足迹点，涉及 {len(coverage_dict)} 颗卫星")
+			return coverage_dict
+		except Exception as e:
+			print(f"❌ 获取卫星足迹失败: {e}")
+			return None
+
+	def filter_intersecting_satellites(self, coverage_dict):
+		"""筛选与武汉市相交的卫星"""
+		print("\n正在筛选与武汉市相交的卫星...")
+		if not coverage_dict:
+			return []
+
+		wuhan_geojson_str = json.dumps(self.wuhan_geojson)
+		intersecting_satellites = []
+
+		for satellite_name, satellite_geojson in coverage_dict.items():
+			if not satellite_geojson.get('features'):
+				continue
+			try:
+				if any(intersects(json.dumps(satellite_geojson), wuhan_geojson_str)):
+					intersecting_satellites.append(satellite_name)
+					print(f"  - ✅ {satellite_name}: 与武汉市相交")
+			except Exception as e:
+				print(f"  - ❌ 检查卫星 {satellite_name} 时出错: {e}")
+
+		print(f"\n✅ 筛选完成，找到 {len(intersecting_satellites)} 颗相交卫星")
+		return intersecting_satellites
+
+	def calculate_coverage_for_satellites(self, intersecting_satellites, start_time, end_time, fov=10.0,
+	                                      interval_seconds=600):
+		"""计算每个相交卫星的覆盖率"""
+		print(f"\n正在计算卫星覆盖率...")
+		if not intersecting_satellites:
+			return {}
+
+		filtered_tle_dict = {name: self.tle_data[name] for name in intersecting_satellites}
+		try:
+			coverage_results = get_observation_overlap(
+				tle_dict=filtered_tle_dict, start_time_str=start_time, end_time_str=end_time,
+				target_geojson=self.wuhan_geojson, fov=fov, interval_seconds=interval_seconds
+			)
+			print(f"✅ 覆盖率计算完成")
+			for satellite, data in coverage_results.items():
+				print(
+					f"   - {satellite}: 覆盖率 {data['coverage_ratio']:.2%}, 相交足迹: {len(data['intersection_footprints'])}个")
+			return coverage_results
+		except Exception as e:
+			print(f"❌ 计算覆盖率失败: {e}")
+			return {}
+
+	def find_optimal_coverage_plan(self, coverage_results, target_coverage=0.9):
+		"""寻找最优覆盖方案"""
+		print(f"\n正在寻找最优覆盖方案 (目标: {target_coverage:.0%})...")
+		if not coverage_results: return None
+
+		# 检查单个卫星方案
+		for satellite, data in coverage_results.items():
+			if data['coverage_ratio'] >= target_coverage:
+				print(f"✅ 找到单个卫星解决方案: {satellite} (覆盖率: {data['coverage_ratio']:.2%})")
+				return {'type': 'single', 'satellites': [satellite], 'coverage': data['coverage_ratio']}
+
+		# 寻找组合方案
+		print("   没有单个卫星能达到目标，正在寻找组合方案...")
+		sorted_satellites = sorted(coverage_results.keys(), key=lambda sat: coverage_results[sat]['coverage_ratio'],
+		                           reverse=True)
+
+		# 定义用于面积计算的投影
+		wgs84_proj = Proj('epsg:4326')
+		equal_area_proj = Proj('+proj=moll')  # Mollweide等面积投影
+		transformer = Transformer.from_proj(wgs84_proj, equal_area_proj, always_xy=True)
+		wuhan_shape = shape(self.wuhan_geojson['features'][0]['geometry'])
+		wuhan_area = transform(transformer.transform, wuhan_shape).area
+
+		for combination_size in range(2, min(5, len(sorted_satellites) + 1)):
+			for combo in combinations(sorted_satellites, combination_size):
+				combo_coverage = self._calculate_combined_coverage(list(combo), coverage_results, transformer,
+				                                                   wuhan_area)
+				if combo_coverage >= target_coverage:
+					print(f"✅ 找到最佳组合方案: {list(combo)} (覆盖率: {combo_coverage:.2%})")
+					return {'type': 'combination', 'satellites': list(combo), 'coverage': combo_coverage}
+
+		print("❌ 无法找到满足要求的卫星组合")
+		return None
+
+	def _calculate_combined_coverage(self, satellite_list, coverage_results, transformer, target_area):
+		"""【已优化】精确计算卫星组合的并集覆盖率"""
+		all_footprints = []
+		for satellite in satellite_list:
+			footprint_features = coverage_results[satellite]['intersection_footprints']
+			for feature in footprint_features:
+				all_footprints.append(shape(feature['geometry']))
+
+		if not all_footprints: return 0.0
+
+		# 合并所有足迹并计算投影后的面积
+		merged_footprints = unary_union(all_footprints)
+		projected_merged = transform(transformer.transform, merged_footprints)
+		return projected_merged.area / target_area
+
+	def create_coverage_visualization(self, coverage_results, coverage_dict,
+	                                  output_file="wuhan_satellite_coverage_map.html"):
+		"""
+		【已修改】创建交互式卫星覆盖可视化地图。
+		每个卫星的覆盖区域都是一个独立的、可在图层控件中切换的图层。
+		"""
+		if not folium:
+			print("Folium库未安装，无法创建地图。")
+			return None
+
+		print("\n=== 正在创建交互式可视化地图 ===")
+		try:
+			m = folium.Map(location=[30.4, 114.4], zoom_start=9, tiles="CartoDB positron")
+
+			# 1. 绘制武汉市边界 (作为固定图层)
+			folium.GeoJson(self.wuhan_geojson, name='武汉市边界',
+			               style_function=lambda x: {'color': 'black', 'weight': 3, 'fillOpacity': 0.1,
+			                                         'fillColor': 'gray'},
+			               tooltip='武汉市研究区域').add_to(m)
+
+			# 2. 【修改】为每个卫星创建独立的、可切换的图层
+			# 定义一个颜色列表，为不同卫星分配不同颜色，方便区分
+			colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6',
+			          '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#800000', '#aaffc3', '#000075']
+
+			# (可选) 按覆盖率从高到低排序，让最重要的卫星显示在列表顶部
+			sorted_results = sorted(coverage_results.items(), key=lambda item: item[1]['coverage_ratio'], reverse=True)
+
+			for i, (satellite_name, data) in enumerate(sorted_results):
+				if data.get('intersection_footprints'):
+					# 为每个卫星创建一个FeatureGroup，它将作为独立的图层
+					# 在图层名称中直接显示覆盖率，一目了然
+					layer_name = f"{satellite_name} ({data['coverage_ratio']:.1%})"
+					satellite_layer = folium.FeatureGroup(name=layer_name, show=True)
+
+					# 从颜色列表中循环选择一个颜色
+					color = colors[i % len(colors)]
+
+					# 将该卫星的所有相交足迹添加到它的专属图层中
+					folium.GeoJson(
+						{"type": "FeatureCollection", "features": data['intersection_footprints']},
+						style_function=lambda x, c=color: {'color': c, 'weight': 2, 'fillColor': c, 'fillOpacity': 0.5},
+						tooltip=f"<b>{satellite_name}</b><br>覆盖率: {data['coverage_ratio']:.2%}"
+					).add_to(satellite_layer)
+
+					# 将这个卫星图层添加到主地图
+					satellite_layer.add_to(m)
+
+			# 3. 【修改】移除静态HTML图例，只保留图层控制器
+			# folium.LayerControl会自动识别所有添加的独立图层，并生成一个可勾选的列表
+			folium.LayerControl(collapsed=False).add_to(m)
+			m.save(output_file)
+			print(f"✅ 交互式可视化地图已保存到: {output_file}")
+			return output_file
+
+		except Exception as e:
+			print(f"❌ 生成可视化地图时出错: {e}")
+			return None
+
+	def generate_observation_plan(self, start_time, end_time, fov=45.0, interval_seconds=600):
+		"""生成完整的观测规划"""
+		print("=" * 60)
+		print("武汉市卫星观测规划生成器")
+		print("=" * 60)
+
+		if not self.load_tle_data():
+			return None
+		self.define_wuhan_area()
+
+		coverage_dict = self.get_satellite_footprints(start_time, end_time, fov, interval_seconds)
+		if not coverage_dict:
+			return None
+
+		intersecting_satellites = self.filter_intersecting_satellites(coverage_dict)
+		if not intersecting_satellites:
+			return None
+
+		coverage_results = self.calculate_coverage_for_satellites(
+			intersecting_satellites, start_time, end_time, fov, interval_seconds
+		)
+
+		optimal_plan = self.find_optimal_coverage_plan(coverage_results)
+
+		# 生成最终报告
+		final_report = {
+			'planning_period': {'start_time': start_time, 'end_time': end_time},
+			'target_area': '武汉市',
+			'intersecting_satellites_count': len(intersecting_satellites),
+			'coverage_by_satellite': {k: v['coverage_ratio'] for k, v in coverage_results.items()},
+			'optimal_plan': optimal_plan,
+			'generation_time': datetime.now().isoformat()
+		}
+
+		# 保存原始几何数据用于可视化
+		self.final_coverage_results_geom = coverage_results
+		self.final_coverage_dict_geom = coverage_dict
+
+		return final_report
 
 
 def main():
-    """主函数"""
-    # 创建规划器实例
-    planner = WuhanSatelliteObservationPlanner()
-    
-    # 设置时间窗口：2025年8月1日至8月10日
-    start_time = "2025-08-01 00:00:00.000"
-    end_time = "2025-08-10 23:59:59.000"
-    
-    # 生成观测规划
-    results = planner.generate_observation_plan(
-        start_time=start_time,
-        end_time=end_time,
-        fov=20.0,  # 30度视场角
-        interval_seconds=600  # 10分钟间隔
-    )
-    
-    if results:
-        # 保存结果
-        output_filename = 'wuhan_satellite_observation_plan.json'
-        planner.save_results(results, output_filename)
-        
-        # 显示最终结果
-        print("\n" + "=" * 80)
-        print("观测规划结果汇总")
-        print("=" * 80)
-        print(f"规划时间: {results['planning_period']['start_time']} 至 {results['planning_period']['end_time']}")
-        print(f"目标区域: {results['target_area']}")
-        print(f"总卫星数量: {results['total_satellites']}")
-        print(f"相交卫星数量: {len(results['intersecting_satellites'])}")
-        
-        if results['optimal_plan']:
-            print(f"\n🏆 推荐方案:")
-            print(f"   类型: {results['optimal_plan']['type']}")
-            print(f"   卫星: {', '.join(results['optimal_plan']['satellites'])}")
-            print(f"   覆盖率: {results['optimal_plan']['coverage']:.2%}")
-            print(f"   说明: {results['optimal_plan']['description']}")
-        else:
-            print("\n❌ 无法找到满足要求的观测方案")
-        
-        print(f"\n详细结果已保存到: {output_filename}")
-    else:
-        print("❌ 观测规划生成失败")
+	"""主函数"""
+	planner = WuhanSatelliteObservationPlanner()
+
+	start_time = "2025-08-01 00:00:00.000"
+	end_time = "2025-08-01 23:59:59.000"
+
+	results = planner.generate_observation_plan(
+		start_time=start_time, end_time=end_time,
+		fov=20.0, interval_seconds=600
+	)
+
+	if results:
+		# 保存JSON报告
+		output_filename = 'wuhan_satellite_observation_plan.json'
+		with open(output_filename, 'w', encoding='utf-8') as f:
+			json.dump(results, f, ensure_ascii=False, indent=2)
+		print(f"\n✅ 规划报告已保存到: {output_filename}")
+
+		# 创建可视化地图
+		planner.create_coverage_visualization(
+			planner.final_coverage_results_geom,
+			planner.final_coverage_dict_geom
+		)
+
+		# 打印最终推荐方案
+		print("\n" + "=" * 60)
+		print("🏆 最终推荐方案 🏆")
+		print("=" * 60)
+		if results['optimal_plan']:
+			plan = results['optimal_plan']
+			print(f"  - 类型: {'单星覆盖' if plan['type'] == 'single' else '多星组合'}")
+			print(f"  - 卫星: {', '.join(plan['satellites'])}")
+			print(f"  - 预估覆盖率: {plan['coverage']:.2%}")
+		else:
+			print("  ❌ 未能找到满足覆盖率目标的方案。")
+		print("=" * 60)
+	else:
+		print("\n❌ 观测规划生成失败")
 
 
 if __name__ == "__main__":
-    main() 
+	main()
