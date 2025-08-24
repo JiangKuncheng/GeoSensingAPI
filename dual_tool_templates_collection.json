@@ -1,0 +1,204 @@
+[
+  {
+    "template_name": "卫星观测轨迹模板 (get_observation_lace 单工具)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User", 
+        "value": "I need to get the satellite observation trajectory for LANDSAT 8 during August 1st, 2025."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user needs satellite observation trajectory for LANDSAT 8 on a specific date. This can be structured as: {Target: LANDSAT 8 satellite, Operation: trajectory calculation, Time: August 1st 2025}. This is an evaluation task requiring quantitative coverage analysis. The process chain is [Task Phase → Evaluation Phase]. The tool chain is [get_observation_lace]. I can directly use the `get_observation_lace` tool which automatically handles TLE data retrieval and trajectory calculation."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation task that can be completed in a single step. The `get_observation_lace` tool can directly calculate satellite observation trajectories by accepting satellite names and automatically retrieving TLE data, computing trajectories, and saving results as GeoJSON files.",
+          "tool": "get_observation_lace",
+          "tool_input": {
+            "satellite_names": "LANDSAT 8",
+            "start_time_str": "2025-08-01 00:00:00.000",
+            "end_time_str": "2025-08-01 23:59:59.000", 
+            "fov": 15.0
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "LANDSAT_8_observation_lace.geojson"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated LANDSAT 8's observation trajectory for August 1st, 2025, and saved it as a GeoJSON file. The single-tool solution using `get_observation_lace` has been completed efficiently. The trajectory data is now available in the specified file.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "几何验证模板 (is_valid → is_valid_reason)",
+    "template_content": [
+      {
+        "from": "User",
+        "value": "I need to check if the geometry in my polygon_area GeoJSON file is valid, and if not, get the specific reason why it's invalid."
+      },
+      {
+        "from": "Assistant", 
+        "value": {
+          "thought": "The user wants to: 1) Check geometry validity, and 2) Get detailed reasons if invalid. This can be structured as: {Target: polygon_area geometry, Operation: validity check + reason analysis}. This is an evaluation task for quality assessment. The process chain is [Task Phase → Evaluation Phase]. The tool chain is [is_valid → is_valid_reason]. I'm in the evaluation phase and need to check validity first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation task in the evaluation phase. I need to first check if the geometry is valid using the `is_valid` tool. This tool returns boolean results indicating validity status. If the geometry is invalid, I'll then use `is_valid_reason` to get detailed diagnostic information.",
+          "tool": "is_valid",
+          "tool_input": {
+            "geojson_names": "polygon_area"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [false]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The is_valid tool returned [false], indicating the geometry in polygon_area is invalid. Now I need to use the `is_valid_reason` tool to get specific diagnostic information about why the geometry is invalid. This will provide detailed error descriptions to help understand and fix the geometry issues.",
+          "tool": "is_valid_reason", 
+          "tool_input": {
+            "geojson_names": "polygon_area"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": ["Self-intersection at point (114.5, 30.7)"]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The dual-tool chain `is_valid` → `is_valid_reason` has been completed successfully. The geometry is invalid due to a self-intersection at coordinates (114.5, 30.7). I have the complete diagnostic information needed.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "缓冲区分析模板 (buffer → area)",
+    "template_content": [
+      {
+        "from": "User",
+        "value": "I want to create a 500-meter buffer around the Wuhan city boundary and then calculate its total area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user needs to: 1) Create a 500m buffer around Wuhan boundary, and 2) Calculate the buffer area. This can be structured as: {Target: Wuhan boundary, Operation: buffer creation + area calculation, Distance: 500 meters}. This is a configuration task involving geometric transformation and measurement. The process chain is [Task Phase → Configuration Phase]. The tool chain is [buffer → area]. I'm in the configuration phase and need to create the buffer first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration task in the configuration phase. I need to first create a 500-meter buffer around Wuhan using the `buffer` tool. This assumes the Wuhan boundary GeoJSON already exists. After creating the buffer, I'll use the `area` tool to calculate the total area of the buffered region.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "Wuhan",
+            "distance": 500
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "Wuhan_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The buffer tool successfully created a 500-meter buffer around Wuhan and saved it as 'Wuhan_buffer'. Now I need to calculate the area of this buffered region using the `area` tool. The input should be the buffer filename 'Wuhan_buffer'.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "Wuhan_buffer"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 8847562.34
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The dual-tool chain `buffer` → `area` has been completed successfully. The 500-meter buffer around Wuhan has a total area of 8,847,562.34 square meters. The configuration task is complete.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "空间关系检测模板 (intersects → intersection)",
+    "template_content": [
+      {
+        "from": "User",
+        "value": "I need to check if the satellite coverage intersects with the Wuhan boundary, and if it does, get the actual intersection area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to: 1) Check if satellite coverage intersects with Wuhan boundary, and 2) Get the intersection geometry if it exists. This can be structured as: {Target A: satellite coverage, Target B: Wuhan boundary, Operation: intersection detection + extraction}. This is an evaluation task for spatial relationship analysis. The process chain is [Task Phase → Evaluation Phase].The tool chain is [intersects → intersection]. I need to first check if intersection exists."
+        }
+      },
+      {
+        "from": "Assistant", 
+        "value": {
+          "thought": "This is an evaluation task in the evaluation phase. I need to first check if the satellite coverage intersects with Wuhan using the `intersects` tool. This returns a boolean result. If intersection exists, I'll then use the `intersection` tool to extract the actual overlapping geometry.",
+          "tool": "intersects",
+          "tool_input": {
+            "geojson_names": "satellite_coverage",
+            "other_geojson_name": "Wuhan"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The intersects tool returned true, confirming that the satellite coverage does intersect with the Wuhan boundary. Now I need to use the `intersection` tool to extract the actual intersection geometry and save it as a new GeoJSON file for further analysis.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "satellite_coverage", 
+            "clip_geojson_name": "Wuhan"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "satellite_coverage_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The dual-tool chain `intersects` → `intersection` has been completed successfully. The satellite coverage does intersect with Wuhan boundary, and the intersection geometry has been extracted and saved as 'satellite_coverage_intersection'. This can now be used for further area calculation or analysis.",
+          "tool": "Finish", 
+          "tool_input": {}
+        }
+      }
+    ]
+  }
+]

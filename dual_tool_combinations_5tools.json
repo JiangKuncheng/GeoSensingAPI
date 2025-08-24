@@ -1,0 +1,3079 @@
+[
+  {
+    "template_name": "5工具组合01 (get_boundary → buffer → intersection → is_valid → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to get the administrative boundary for Chengdu, create a 1200-meter buffer around it, find its intersection with the flood_risk_area, validate the resulting geometry, and calculate the intersection area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to get boundary, create buffer, find intersection, validate geometry, and calculate area. This can be structured as: {Target A: Chengdu boundary, Target B: flood_risk_area, Operation: boundary retrieval + buffer creation + intersection calculation + validation + area calculation, Distance: 1200 meters}. This is a discovery, configuration and evaluation task involving multiple geometric operations and quality checks. The process chain is [Task Phase → Discovery Phase → Configuration Phase → Evaluation Phase]. The tool chain is [get_boundary → buffer → intersection → is_valid → area]. I need to first obtain the boundary data."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a discovery, configuration and evaluation task following the [get_boundary → buffer → intersection → is_valid → area] tool chain. I need to first use `get_boundary` to obtain Chengdu's administrative boundary.",
+          "tool": "get_boundary",
+          "tool_input": {
+            "place_names": "Chengdu"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "Chengdu": "geojson/Chengdu.geojson"
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully obtained Chengdu's boundary. Now I need to create a 1200-meter buffer using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "Chengdu",
+            "distance": 1200
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "Chengdu_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to find the intersection with flood_risk_area using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "Chengdu_buffer",
+            "clip_geojson_name": "flood_risk_area"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "Chengdu_buffer_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created intersection. Now I need to validate the resulting geometry using the `is_valid` tool to ensure it's geometrically valid.",
+          "tool": "is_valid",
+          "tool_input": {
+            "geojson_names": "Chengdu_buffer_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [true]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The geometry is valid. Now I need to calculate the intersection area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "Chengdu_buffer_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 3789456.12
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `get_boundary` → `buffer` → `intersection` → `is_valid` → `area` has been completed successfully. Chengdu's boundary has been obtained, a 1200-meter buffer created around it, intersection with flood risk area calculated, geometry validated as valid, and the intersection area is 3,789,456.12 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合02 (union → convex_hull → centroid → buffer → intersects)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to merge the research_sites, create a convex hull around the combined area, find its centroid, create a 1800-meter buffer around the centroid, and check if it intersects with the protected_wildlife_corridor."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to merge areas, create convex hull, find centroid, create buffer, and check intersection. This can be structured as: {Target A: research_site1, Target B: research_site2, Target C: protected_wildlife_corridor, Operation: union + convex hull creation + centroid calculation + buffer creation + intersection check, Distance: 1800 meters}. This is a configuration and evaluation task involving multiple geometric transformations and spatial analysis. The process chain is [Task Phase → Configuration Phase → Evaluation Phase]. The tool chain is [union → convex_hull → centroid → buffer → intersects]. I need to merge the sites first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration and evaluation task following the [union → convex_hull → centroid → buffer → intersects] tool chain. I need to first use `union` to merge the research sites.",
+          "tool": "union",
+          "tool_input": {
+            "geojson_name1": "research_site1",
+            "geojson_name2": "research_site2"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "research_site1_research_site2_union"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully merged research sites. Now I need to create a convex hull around the combined area using the `convex_hull` tool.",
+          "tool": "convex_hull",
+          "tool_input": {
+            "geojson_names": "research_site1_research_site2_union"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "research_site1_research_site2_union_convex_hull"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created convex hull. Now I need to find its centroid using the `centroid` tool.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "research_site1_research_site2_union_convex_hull"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "research_site1_research_site2_union_convex_hull_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to create a 1800-meter buffer around the centroid using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "research_site1_research_site2_union_convex_hull_centroid",
+            "distance": 1800
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "research_site1_research_site2_union_convex_hull_centroid_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to check if it intersects with the protected wildlife corridor using the `intersects` tool.",
+          "tool": "intersects",
+          "tool_input": {
+            "geojson_names": "research_site1_research_site2_union_convex_hull_centroid_buffer",
+            "other_geojson_name": "protected_wildlife_corridor"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `union` → `convex_hull` → `centroid` → `buffer` → `intersects` has been completed successfully. The research sites have been merged, a convex hull created around the combined area, its centroid calculated, a 1800-meter buffer created around the centroid, and confirmed that it intersects with the protected wildlife corridor.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合03 (query_satellite → get_tle → get_satellite_footprint → intersection → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to search for imaging satellites, get their TLE data, calculate their satellite footprints, find the intersection with the study_area, and calculate the intersection area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to search satellites, get TLE data, calculate footprints, find intersection, and calculate area. This can be structured as: {Target A: imaging satellites, Target B: study_area, Operation: satellite query + TLE retrieval + footprint calculation + intersection calculation + area calculation}. This is a discovery and evaluation task involving satellite identification, orbital analysis, and spatial assessment. The process chain is [Task Phase → Discovery Phase → Evaluation Phase]. The tool chain is [query_satellite → get_tle → get_satellite_footprint → intersection → area]. I need to search for satellites first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a discovery and evaluation task following the [query_satellite → get_tle → get_satellite_footprint → intersection → area] tool chain. I need to first use `query_satellite` to find imaging satellites.",
+          "tool": "query_satellite",
+          "tool_input": {
+            "query": "imaging"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": ["WORLDVIEW-3", "QUICKBIRD", "IKONOS"]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully found imaging satellites. Now I need to get their TLE data using the `get_tle` tool.",
+          "tool": "get_tle",
+          "tool_input": {
+            "satellite_names": ["WORLDVIEW-3", "QUICKBIRD", "IKONOS"]
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "WORLDVIEW-3": "1 40115U 14049A   25001.50000000  .00000056  00000-0  34567-4 0  9995\n2 40115  97.8901 234.5678 0002345  91.2345 268.9012 14.84567890123456",
+          "QUICKBIRD": "1 27424U 01049A   25001.50000000  .00000067  00000-0  45678-4 0  9994\n2 27424  97.1234 345.6789 0003456  92.3456 267.8901 14.93678901234567",
+          "IKONOS": "1 25919U 99045A   25001.50000000  .00000078  00000-0  56789-4 0  9993\n2 25919  98.2345 456.7890 0004567  93.4567 266.7890 14.12789012345678"
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully obtained TLE data for all satellites. Now I need to calculate their satellite footprints using the `get_satellite_footprint` tool.",
+          "tool": "get_satellite_footprint",
+          "tool_input": {
+            "tle_dict": {
+              "WORLDVIEW-3": "1 40115U 14049A   25001.50000000  .00000056  00000-0  34567-4 0  9995\n2 40115  97.8901 234.5678 0002345  91.2345 268.9012 14.84567890123456",
+              "QUICKBIRD": "1 27424U 01049A   25001.50000000  .00000067  00000-0  45678-4 0  9994\n2 27424  97.1234 345.6789 0003456  92.3456 267.8901 14.93678901234567",
+              "IKONOS": "1 25919U 99045A   25001.50000000  .00000078  00000-0  56789-4 0  9993\n2 25919  98.2345 456.7890 0004567  93.4567 266.7890 14.12789012345678"
+            },
+            "start_time_str": "2025-01-15 16:00:00.000",
+            "end_time_str": "2025-01-15 17:00:00.000"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "satellite_imaging_footprints"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated satellite footprints. Now I need to find the intersection with study_area using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "satellite_imaging_footprints",
+            "clip_geojson_name": "study_area"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "satellite_imaging_footprints_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created intersection. Now I need to calculate the intersection area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "satellite_imaging_footprints_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 8901234.56
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `query_satellite` → `get_tle` → `get_satellite_footprint` → `intersection` → `area` has been completed successfully. Imaging satellites have been found, their TLE data retrieved, satellite footprints calculated for the specified time period, intersection with study area found, and the intersection area calculated as 8,901,234.56 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合04 (intersection → is_valid → simplify → boundary → length)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to find the intersection between the urban_expansion and environmental_zone, validate the geometry, simplify it for analysis, extract its boundary, and calculate the boundary length."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to find intersection, validate geometry, simplify result, extract boundary, and calculate length. This can be structured as: {Target A: urban_expansion, Target B: environmental_zone, Operation: intersection calculation + validation + simplification + boundary extraction + length calculation}. This is an evaluation and configuration task involving geometric processing, quality checks, and measurement. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [intersection → is_valid → simplify → boundary → length]. I need to find the intersection first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [intersection → is_valid → simplify → boundary → length] tool chain. I need to first use `intersection` to find the overlapping area between urban expansion and environmental zone.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "urban_expansion",
+            "clip_geojson_name": "environmental_zone"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "urban_expansion_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created intersection. Now I need to validate the geometry using the `is_valid` tool to ensure it's geometrically valid.",
+          "tool": "is_valid",
+          "tool_input": {
+            "geojson_names": "urban_expansion_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [true]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The geometry is valid. Now I need to simplify it for analysis using the `simplify` tool.",
+          "tool": "simplify",
+          "tool_input": {
+            "geojson_names": "urban_expansion_intersection",
+            "tolerance": 0.01
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "urban_expansion_intersection_simplified"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully simplified geometry. Now I need to extract its boundary using the `boundary` tool.",
+          "tool": "boundary",
+          "tool_input": {
+            "geojson_names": "urban_expansion_intersection_simplified"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "urban_expansion_intersection_simplified_boundary"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted boundary. Now I need to calculate the boundary length using the `length` tool.",
+          "tool": "length",
+          "tool_input": {
+            "geojson_names": "urban_expansion_intersection_simplified_boundary"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [23456.78]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `intersection` → `is_valid` → `simplify` → `boundary` → `length` has been completed successfully. The intersection between urban expansion and environmental zone has been found, validated as geometrically valid, simplified for analysis, boundary extracted, and the boundary length calculated as 23,456.78 meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合05 (envelope → buffer → difference → convex_hull → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to create the bounding box of the industrial_complex, add a 2200-meter buffer around it, subtract the residential_areas from the buffered area, create a convex hull around the remaining area, and calculate its area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to create bounding box, add buffer, subtract areas, create convex hull, and calculate area. This can be structured as: {Target A: industrial_complex, Target B: residential_areas, Operation: envelope creation + buffer addition + difference calculation + convex hull creation + area calculation, Distance: 2200 meters}. This is a configuration and evaluation task involving geometric processing and spatial analysis. The process chain is [Task Phase → Configuration Phase → Evaluation Phase]. The tool chain is [envelope → buffer → difference → convex_hull → area]. I need to create the envelope first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration and evaluation task following the [envelope → buffer → difference → convex_hull → area] tool chain. I need to first use `envelope` to create the bounding box of the industrial complex.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "industrial_complex"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "industrial_complex_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to add a 2200-meter buffer around it using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "industrial_complex_envelope",
+            "distance": 2200
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "industrial_complex_envelope_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to subtract the residential areas from the buffered area using the `difference` tool.",
+          "tool": "difference",
+          "tool_input": {
+            "geojson_names": "industrial_complex_envelope_buffer",
+            "clip_geojson_name": "residential_areas"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "industrial_complex_envelope_buffer_difference"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated difference. Now I need to create a convex hull around the remaining area using the `convex_hull` tool.",
+          "tool": "convex_hull",
+          "tool_input": {
+            "geojson_names": "industrial_complex_envelope_buffer_difference"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "industrial_complex_envelope_buffer_difference_convex_hull"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created convex hull. Now I need to calculate its area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "industrial_complex_envelope_buffer_difference_convex_hull"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 12345678.90
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `envelope` → `buffer` → `difference` → `convex_hull` → `area` has been completed successfully. The bounding box of industrial complex has been created, a 2200-meter buffer added around it, residential areas subtracted from the buffered area, a convex hull created around the remaining area, and its area calculated as 12,345,678.90 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合06 (centroid → distance → buffer → intersection → contains)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to find the centroid of the emergency_facility, calculate its distance to the disaster_area, create a 1500-meter buffer around the centroid, find the intersection with the evacuation_routes, and check if the intersection contains the critical_points."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to find centroid, calculate distance, create buffer, find intersection, and check containment. This can be structured as: {Target A: emergency_facility, Target B: disaster_area, Target C: evacuation_routes, Target D: critical_points, Operation: centroid calculation + distance measurement + buffer creation + intersection calculation + containment check, Distance: 1500 meters}. This is an evaluation and configuration task involving geometric analysis and spatial relationship assessment. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [centroid → distance → buffer → intersection → contains]. I need to find the centroid first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [centroid → distance → buffer → intersection → contains] tool chain. I need to first use `centroid` to find the center point of the emergency facility.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "emergency_facility"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "emergency_facility_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to calculate its distance to the disaster area using the `distance` tool.",
+          "tool": "distance",
+          "tool_input": {
+            "geojson_names": "emergency_facility_centroid",
+            "other_geojson_name": "disaster_area"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [4567.89]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated distance. Now I need to create a 1500-meter buffer around the centroid using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "emergency_facility_centroid",
+            "distance": 1500
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "emergency_facility_centroid_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to find the intersection with evacuation routes using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "emergency_facility_centroid_buffer",
+            "clip_geojson_name": "evacuation_routes"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "emergency_facility_centroid_buffer_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created intersection. Now I need to check if the intersection contains the critical points using the `contains` tool.",
+          "tool": "contains",
+          "tool_input": {
+            "geojson_names": "emergency_facility_centroid_buffer_intersection",
+            "other_geojson_name": "critical_points"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `centroid` → `distance` → `buffer` → `intersection` → `contains` has been completed successfully. The emergency facility's centroid has been calculated, its distance to disaster area is 4,567.89 meters, a 1500-meter buffer created around the centroid, intersection with evacuation routes found, and confirmed that the intersection contains the critical points.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合07 (symmetric_difference → envelope → centroid → buffer → overlaps)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to find the symmetric difference between the existing_coverage and planned_coverage, create its bounding box, find the centroid of the bounding box, create a 1000-meter buffer around the centroid, and check if it overlaps with the operational_areas."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to find symmetric difference, create bounding box, find centroid, create buffer, and check overlap. This can be structured as: {Target A: existing_coverage, Target B: planned_coverage, Target C: operational_areas, Operation: symmetric difference + envelope creation + centroid calculation + buffer creation + overlap check, Distance: 1000 meters}. This is a configuration and evaluation task involving geometric analysis and spatial relationship assessment. The process chain is [Task Phase → Configuration Phase → Evaluation Phase]. The tool chain is [symmetric_difference → envelope → centroid → buffer → overlaps]. I need to find the symmetric difference first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration and evaluation task following the [symmetric_difference → envelope → centroid → buffer → overlaps] tool chain. I need to first use `symmetric_difference` to find areas that are in either existing or planned coverage but not in both.",
+          "tool": "symmetric_difference",
+          "tool_input": {
+            "geojson_names": "existing_coverage",
+            "other_geojson_name": "planned_coverage"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "existing_coverage_symmetric_difference"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated symmetric difference. Now I need to create its bounding box using the `envelope` tool.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "existing_coverage_symmetric_difference"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "existing_coverage_symmetric_difference_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to find the centroid of the bounding box using the `centroid` tool.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "existing_coverage_symmetric_difference_envelope"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "existing_coverage_symmetric_difference_envelope_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to create a 1000-meter buffer around the centroid using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "existing_coverage_symmetric_difference_envelope_centroid",
+            "distance": 1000
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "existing_coverage_symmetric_difference_envelope_centroid_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to check if it overlaps with operational areas using the `overlaps` tool.",
+          "tool": "overlaps",
+          "tool_input": {
+            "geojson_names": "existing_coverage_symmetric_difference_envelope_centroid_buffer",
+            "other_geojson_name": "operational_areas"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `symmetric_difference` → `envelope` → `centroid` → `buffer` → `overlaps` has been completed successfully. The symmetric difference between existing and planned coverage has been found, its bounding box created, centroid of the bounding box calculated, a 1000-meter buffer created around the centroid, and confirmed that it overlaps with operational areas.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合08 (clip_by_rect → union → boundary → simplify → length)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to clip the vegetation_patches by a rectangular area, merge all the clipped patches, extract the boundary of the merged area, simplify it for mapping, and calculate the boundary length."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to clip by rectangle, merge patches, extract boundary, simplify it, and calculate length. This can be structured as: {Target A: vegetation_patch1, Target B: vegetation_patch2, Operation: rectangular clipping + union + boundary extraction + simplification + length calculation}. This is a configuration and evaluation task involving geometric processing and measurement. The process chain is [Task Phase → Configuration Phase → Evaluation Phase]. The tool chain is [clip_by_rect → union → boundary → simplify → length]. I need to clip by rectangle first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration and evaluation task following the [clip_by_rect → union → boundary → simplify → length] tool chain. I need to first use `clip_by_rect` to clip the vegetation patches by a rectangular area.",
+          "tool": "clip_by_rect",
+          "tool_input": {
+            "geojson_names": "vegetation_patches",
+            "minx": 113.5,
+            "miny": 22.0,
+            "maxx": 115.5,
+            "maxy": 24.0
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "vegetation_patches_clipped"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully clipped by rectangle. Now I need to merge all the clipped patches using the `union` tool.",
+          "tool": "union",
+          "tool_input": {
+            "geojson_name1": "vegetation_patch1_clipped",
+            "geojson_name2": "vegetation_patch2_clipped"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "vegetation_patch1_clipped_union"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully merged clipped patches. Now I need to extract the boundary of the merged area using the `boundary` tool.",
+          "tool": "boundary",
+          "tool_input": {
+            "geojson_names": "vegetation_patch1_clipped_union"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "vegetation_patch1_clipped_union_boundary"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted boundary. Now I need to simplify it for mapping using the `simplify` tool.",
+          "tool": "simplify",
+          "tool_input": {
+            "geojson_names": "vegetation_patch1_clipped_union_boundary",
+            "tolerance": 0.005
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "vegetation_patch1_clipped_union_boundary_simplified"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully simplified boundary. Now I need to calculate the boundary length using the `length` tool.",
+          "tool": "length",
+          "tool_input": {
+            "geojson_names": "vegetation_patch1_clipped_union_boundary_simplified"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [16789.23]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `clip_by_rect` → `union` → `boundary` → `simplify` → `length` has been completed successfully. The vegetation patches have been clipped by a rectangular area, all clipped patches merged, boundary of the merged area extracted, simplified for mapping, and the boundary length calculated as 16,789.23 meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合09 (difference → is_valid → envelope → buffer → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to subtract the contaminated_zones from the agricultural_land, validate the resulting geometry, create a bounding box around it, add a 800-meter buffer around the bounding box, and calculate the buffer area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to subtract areas, validate geometry, create bounding box, add buffer, and calculate area. This can be structured as: {Target A: agricultural_land, Target B: contaminated_zones, Operation: difference calculation + validation + envelope creation + buffer addition + area calculation, Distance: 800 meters}. This is a configuration and evaluation task involving geometric processing, quality checks, and measurement. The process chain is [Task Phase → Configuration Phase → Evaluation Phase]. The tool chain is [difference → is_valid → envelope → buffer → area]. I need to calculate the difference first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration and evaluation task following the [difference → is_valid → envelope → buffer → area] tool chain. I need to first use `difference` to subtract the contaminated zones from the agricultural land.",
+          "tool": "difference",
+          "tool_input": {
+            "geojson_names": "agricultural_land",
+            "clip_geojson_name": "contaminated_zones"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "agricultural_land_difference"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated difference. Now I need to validate the resulting geometry using the `is_valid` tool.",
+          "tool": "is_valid",
+          "tool_input": {
+            "geojson_names": "agricultural_land_difference"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [true]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The geometry is valid. Now I need to create a bounding box around it using the `envelope` tool.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "agricultural_land_difference"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "agricultural_land_difference_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to add a 800-meter buffer around the bounding box using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "agricultural_land_difference_envelope",
+            "distance": 800
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "agricultural_land_difference_envelope_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to calculate the buffer area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "agricultural_land_difference_envelope_buffer"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 15678901.23
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `difference` → `is_valid` → `envelope` → `buffer` → `area` has been completed successfully. Contaminated zones have been subtracted from agricultural land, geometry validated as valid, a bounding box created around the result, an 800-meter buffer added around the bounding box, and the buffer area calculated as 15,678,901.23 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合10 (get_observation_overlap → intersection → boundary → buffer → intersects)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to calculate observation overlap between multiple satellites, find the intersection with the priority_region, extract the boundary of the intersection, create a 700-meter buffer around the boundary, and check if it intersects with the infrastructure_network."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to calculate observation overlap, find intersection, extract boundary, create buffer, and check intersection. This can be structured as: {Target A: satellite observation overlap, Target B: priority_region, Target C: infrastructure_network, Operation: overlap calculation + intersection calculation + boundary extraction + buffer creation + intersection check, Distance: 700 meters}. This is a discovery and evaluation task involving satellite observation analysis and spatial assessment. The process chain is [Task Phase → Discovery Phase → Evaluation Phase]. The tool chain is [get_observation_overlap → intersection → boundary → buffer → intersects]. I need to calculate the observation overlap first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a discovery and evaluation task following the [get_observation_overlap → intersection → boundary → buffer → intersects] tool chain. I need to first use `get_observation_overlap` to calculate observation overlap between multiple satellites.",
+          "tool": "get_observation_overlap",
+          "tool_input": {
+            "tle_dict": {
+              "SENTINEL-1A": "1 39634U 14016A   25001.50000000  .00000012  00000-0  12345-5 0  9991\n2 39634  98.1802 123.4567 0001123  90.2345 269.8765 14.59234567890123",
+              "TERRASAR-X": "1 31698U 07026A   25001.50000000  .00000023  00000-0  23456-5 0  9992\n2 31698  97.4456 234.5678 0002234  91.3456 268.7654 15.19345678901234",
+              "COSMO-4": "1 37755U 11035A   25001.50000000  .00000034  00000-0  34567-5 0  9993\n2 37755  97.8901 345.6789 0003345  92.4567 267.6543 14.89456789012345"
+            },
+            "start_time_str": "2025-01-15 18:00:00.000",
+            "end_time_str": "2025-01-15 22:00:00.000"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "satellite_multi_overlap_coverage"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated observation overlap. Now I need to find the intersection with priority_region using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "satellite_multi_overlap_coverage",
+            "clip_geojson_name": "priority_region"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "satellite_multi_overlap_coverage_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created intersection. Now I need to extract the boundary of the intersection using the `boundary` tool.",
+          "tool": "boundary",
+          "tool_input": {
+            "geojson_names": "satellite_multi_overlap_coverage_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "satellite_multi_overlap_coverage_intersection_boundary"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted boundary. Now I need to create a 700-meter buffer around the boundary using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "satellite_multi_overlap_coverage_intersection_boundary",
+            "distance": 700
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "satellite_multi_overlap_coverage_intersection_boundary_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to check if it intersects with the infrastructure network using the `intersects` tool.",
+          "tool": "intersects",
+          "tool_input": {
+            "geojson_names": "satellite_multi_overlap_coverage_intersection_boundary_buffer",
+            "other_geojson_name": "infrastructure_network"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `get_observation_overlap` → `intersection` → `boundary` → `buffer` → `intersects` has been completed successfully. Observation overlap between multiple satellites has been calculated, intersection with priority region found, boundary of the intersection extracted, a 700-meter buffer created around the boundary, and confirmed that it intersects with the infrastructure network.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合11 (buffer → union → intersection → simplify → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to create a 1600-meter buffer around the monitoring_stations, merge all the buffered areas, find the intersection with the sensitive_ecosystem, simplify the result for analysis, and calculate its area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to create buffer, merge areas, find intersection, simplify result, and calculate area. This can be structured as: {Target A: monitoring_stations, Target B: sensitive_ecosystem, Operation: buffer creation + union + intersection calculation + simplification + area calculation, Distance: 1600 meters}. This is a configuration and evaluation task involving multiple geometric transformations and spatial analysis. The process chain is [Task Phase → Configuration Phase → Evaluation Phase]. The tool chain is [buffer → union → intersection → simplify → area]. I need to create the buffer first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration and evaluation task following the [buffer → union → intersection → simplify → area] tool chain. I need to first use `buffer` to create a 1600-meter buffer around the monitoring stations.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "monitoring_stations",
+            "distance": 1600
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "monitoring_stations_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to merge all the buffered areas using the `union` tool.",
+          "tool": "union",
+          "tool_input": {
+            "geojson_name1": "monitoring_station1_buffer",
+            "geojson_name2": "monitoring_station2_buffer"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "monitoring_station1_buffer_union"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully merged buffered areas. Now I need to find the intersection with sensitive_ecosystem using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "monitoring_station1_buffer_union",
+            "clip_geojson_name": "sensitive_ecosystem"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "monitoring_station1_buffer_union_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created intersection. Now I need to simplify the result for analysis using the `simplify` tool.",
+          "tool": "simplify",
+          "tool_input": {
+            "geojson_names": "monitoring_station1_buffer_union_intersection",
+            "tolerance": 0.01
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "monitoring_station1_buffer_union_intersection_simplified"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully simplified geometry. Now I need to calculate its area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "monitoring_station1_buffer_union_intersection_simplified"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 7890123.45
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `buffer` → `union` → `intersection` → `simplify` → `area` has been completed successfully. A 1600-meter buffer has been created around monitoring stations, all buffered areas merged, intersection with sensitive ecosystem found, result simplified for analysis, and the area calculated as 7,890,123.45 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合12 (contains → centroid → distance → buffer → overlaps)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the national_park contains the endangered_habitat, find the centroid of the habitat, calculate its distance to the visitor_center, create a 2000-meter buffer around the center, and check if it overlaps with the restricted_areas."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check containment, find centroid, calculate distance, create buffer, and check overlap. This can be structured as: {Target A: national_park, Target B: endangered_habitat, Target C: visitor_center, Target D: restricted_areas, Operation: containment check + centroid calculation + distance measurement + buffer creation + overlap check, Distance: 2000 meters}. This is an evaluation and configuration task involving spatial relationship analysis and geometric transformation. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [contains → centroid → distance → buffer → overlaps]. I need to check containment first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [contains → centroid → distance → buffer → overlaps] tool chain. I need to first use `contains` to check if national park contains the endangered habitat.",
+          "tool": "contains",
+          "tool_input": {
+            "geojson_names": "national_park",
+            "other_geojson_name": "endangered_habitat"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The contains check returned true. Now I need to find the centroid of the endangered habitat using the `centroid` tool.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "endangered_habitat"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "endangered_habitat_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to calculate its distance to the visitor center using the `distance` tool.",
+          "tool": "distance",
+          "tool_input": {
+            "geojson_names": "endangered_habitat_centroid",
+            "other_geojson_name": "visitor_center"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [6789.01]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated distance. Now I need to create a 2000-meter buffer around the visitor center using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "visitor_center",
+            "distance": 2000
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "visitor_center_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to check if it overlaps with restricted areas using the `overlaps` tool.",
+          "tool": "overlaps",
+          "tool_input": {
+            "geojson_names": "visitor_center_buffer",
+            "other_geojson_name": "restricted_areas"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `contains` → `centroid` → `distance` → `buffer` → `overlaps` has been completed successfully. The national park does contain the endangered habitat, the habitat's centroid has been calculated, its distance to visitor center is 6,789.01 meters, a 2000-meter buffer created around the visitor center, and confirmed that it overlaps with restricted areas.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合13 (get_tle → get_orbit_inclination → get_satellite_footprint → buffer → intersects)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to get the TLE data for SENTINEL-3A, calculate its orbit inclination, generate its satellite footprint, create a 300-meter buffer around the footprint, and check if it intersects with the coastal_monitoring_zone."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to get TLE data, calculate inclination, generate footprint, create buffer, and check intersection. This can be structured as: {Target A: SENTINEL-3A satellite, Target B: coastal_monitoring_zone, Operation: TLE retrieval + inclination calculation + footprint generation + buffer creation + intersection check, Distance: 300 meters}. This is a discovery and evaluation task involving satellite orbital analysis and spatial assessment. The process chain is [Task Phase → Discovery Phase → Evaluation Phase]. The tool chain is [get_tle → get_orbit_inclination → get_satellite_footprint → buffer → intersects]. I need to get the TLE data first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a discovery and evaluation task following the [get_tle → get_orbit_inclination → get_satellite_footprint → buffer → intersects] tool chain. I need to first use `get_tle` to obtain SENTINEL-3A's orbital elements.",
+          "tool": "get_tle",
+          "tool_input": {
+            "satellite_names": ["SENTINEL-3A"]
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "SENTINEL-3A": "1 41335U 16011A   25001.50000000  .00000067  00000-0  45678-4 0  9996\n2 41335  98.6543 210.9876 0001456  89.5432 270.4567 14.27890123456789"
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully obtained TLE data. Now I need to calculate its orbit inclination using the `get_orbit_inclination` tool.",
+          "tool": "get_orbit_inclination",
+          "tool_input": {
+            "tle": {
+              "SENTINEL-3A": "1 41335U 16011A   25001.50000000  .00000067  00000-0  45678-4 0  9996\n2 41335  98.6543 210.9876 0001456  89.5432 270.4567 14.27890123456789"
+            }
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "SENTINEL-3A": 98.6543
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated orbit inclination. Now I need to generate its satellite footprint using the `get_satellite_footprint` tool.",
+          "tool": "get_satellite_footprint",
+          "tool_input": {
+            "tle_dict": {
+              "SENTINEL-3A": "1 41335U 16011A   25001.50000000  .00000067  00000-0  45678-4 0  9996\n2 41335  98.6543 210.9876 0001456  89.5432 270.4567 14.27890123456789"
+            },
+            "start_time_str": "2025-01-15 20:00:00.000",
+            "end_time_str": "2025-01-15 20:30:00.000"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "SENTINEL-3A_footprint"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully generated satellite footprint. Now I need to create a 300-meter buffer around the footprint using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "SENTINEL-3A_footprint",
+            "distance": 300
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "SENTINEL-3A_footprint_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to check if it intersects with the coastal monitoring zone using the `intersects` tool.",
+          "tool": "intersects",
+          "tool_input": {
+            "geojson_names": "SENTINEL-3A_footprint_buffer",
+            "other_geojson_name": "coastal_monitoring_zone"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `get_tle` → `get_orbit_inclination` → `get_satellite_footprint` → `buffer` → `intersects` has been completed successfully. SENTINEL-3A's TLE data has been obtained, orbit inclination calculated as 98.6543 degrees, satellite footprint generated for the specified time period, a 300-meter buffer created around the footprint, and confirmed that it intersects with the coastal monitoring zone.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合14 (overlaps → intersection → convex_hull → centroid → distance)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the transportation_corridor overlaps with the flood_zone, extract the overlapping area, create a convex hull around it, find its centroid, and calculate the distance from the centroid to the emergency_response_center."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check overlap, extract intersection, create convex hull, find centroid, and calculate distance. This can be structured as: {Target A: transportation_corridor, Target B: flood_zone, Target C: emergency_response_center, Operation: overlap check + intersection extraction + convex hull creation + centroid calculation + distance measurement}. This is an evaluation task involving spatial relationship analysis, geometric transformation, and measurement. The process chain is [Task Phase → Evaluation Phase]. The tool chain is [overlaps → intersection → convex_hull → centroid → distance]. I need to check overlap first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation task following the [overlaps → intersection → convex_hull → centroid → distance] tool chain. I need to first use `overlaps` to check if transportation corridor overlaps with flood zone.",
+          "tool": "overlaps",
+          "tool_input": {
+            "geojson_names": "transportation_corridor",
+            "other_geojson_name": "flood_zone"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The overlap check returned true. Now I need to extract the overlapping area using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "transportation_corridor",
+            "clip_geojson_name": "flood_zone"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "transportation_corridor_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted intersection. Now I need to create a convex hull around it using the `convex_hull` tool.",
+          "tool": "convex_hull",
+          "tool_input": {
+            "geojson_names": "transportation_corridor_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "transportation_corridor_intersection_convex_hull"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created convex hull. Now I need to find its centroid using the `centroid` tool.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "transportation_corridor_intersection_convex_hull"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "transportation_corridor_intersection_convex_hull_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to calculate the distance from the centroid to emergency response center using the `distance` tool.",
+          "tool": "distance",
+          "tool_input": {
+            "geojson_names": "transportation_corridor_intersection_convex_hull_centroid",
+            "other_geojson_name": "emergency_response_center"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [8901.23]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `overlaps` → `intersection` → `convex_hull` → `centroid` → `distance` has been completed successfully. The transportation corridor does overlap with the flood zone, overlapping area extracted, a convex hull created around it, its centroid calculated, and the distance from centroid to emergency response center is 8,901.23 meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合15 (touches → boundary → buffer → intersection → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the power_transmission_line touches the forest_boundary, extract the boundary of the forest, create a 500-meter buffer around it, find the intersection with the wildlife_habitat, and calculate the intersection area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check touching relationship, extract boundary, create buffer, find intersection, and calculate area. This can be structured as: {Target A: power_transmission_line, Target B: forest_boundary, Target C: wildlife_habitat, Operation: touch check + boundary extraction + buffer creation + intersection calculation + area calculation, Distance: 500 meters}. This is an evaluation and configuration task involving spatial relationship analysis and geometric processing. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [touches → boundary → buffer → intersection → area]. I need to check touching first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [touches → boundary → buffer → intersection → area] tool chain. I need to first use `touches` to check if power transmission line touches the forest boundary.",
+          "tool": "touches",
+          "tool_input": {
+            "geojson_names": "power_transmission_line",
+            "other_geojson_name": "forest_boundary"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The touch check returned true. Now I need to extract the boundary of the forest using the `boundary` tool.",
+          "tool": "boundary",
+          "tool_input": {
+            "geojson_names": "forest_boundary"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "forest_boundary_boundary"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted boundary. Now I need to create a 500-meter buffer around it using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "forest_boundary_boundary",
+            "distance": 500
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "forest_boundary_boundary_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to find the intersection with wildlife habitat using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "forest_boundary_boundary_buffer",
+            "clip_geojson_name": "wildlife_habitat"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "forest_boundary_boundary_buffer_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created intersection. Now I need to calculate the intersection area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "forest_boundary_boundary_buffer_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 1234567.89
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `touches` → `boundary` → `buffer` → `intersection` → `area` has been completed successfully. The power transmission line does touch the forest boundary, forest boundary extracted, a 500-meter buffer created around it, intersection with wildlife habitat found, and the intersection area calculated as 1,234,567.89 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合16 (within → envelope → centroid → buffer → contains)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the research_facility is within the protected_zone, create its bounding box, find the centroid of the bounding box, create a 1100-meter buffer around the centroid, and check if it contains the observation_equipment."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check containment, create bounding box, find centroid, create buffer, and check containment. This can be structured as: {Target A: research_facility, Target B: protected_zone, Target C: observation_equipment, Operation: containment check + envelope creation + centroid calculation + buffer creation + containment check, Distance: 1100 meters}. This is an evaluation and configuration task involving spatial relationship analysis and geometric transformation. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [within → envelope → centroid → buffer → contains]. I need to check containment first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [within → envelope → centroid → buffer → contains] tool chain. I need to first use `within` to check if research facility is within the protected zone.",
+          "tool": "within",
+          "tool_input": {
+            "geojson_names": "research_facility",
+            "other_geojson_name": "protected_zone"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The within check returned true. Now I need to create its bounding box using the `envelope` tool.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "research_facility"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "research_facility_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to find the centroid of the bounding box using the `centroid` tool.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "research_facility_envelope"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "research_facility_envelope_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to create a 1100-meter buffer around the centroid using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "research_facility_envelope_centroid",
+            "distance": 1100
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "research_facility_envelope_centroid_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to check if it contains the observation equipment using the `contains` tool.",
+          "tool": "contains",
+          "tool_input": {
+            "geojson_names": "research_facility_envelope_centroid_buffer",
+            "other_geojson_name": "observation_equipment"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `within` → `envelope` → `centroid` → `buffer` → `contains` has been completed successfully. The research facility is within the protected zone, its bounding box created, centroid of the bounding box calculated, a 1100-meter buffer created around the centroid, and confirmed that it contains the observation equipment.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合17 (covers → difference → boundary → simplify → length)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the conservation_reserve covers the critical_habitat, subtract the habitat from the reserve, extract the boundary of the remaining area, simplify it for visualization, and calculate the boundary length."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check coverage, subtract area, extract boundary, simplify it, and calculate length. This can be structured as: {Target A: conservation_reserve, Target B: critical_habitat, Operation: coverage check + difference calculation + boundary extraction + simplification + length calculation}. This is an evaluation and configuration task involving spatial relationship analysis, geometric processing, and measurement. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [covers → difference → boundary → simplify → length]. I need to check coverage first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [covers → difference → boundary → simplify → length] tool chain. I need to first use `covers` to check if conservation reserve covers the critical habitat.",
+          "tool": "covers",
+          "tool_input": {
+            "geojson_names": "conservation_reserve",
+            "other_geojson_name": "critical_habitat"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The covers check returned true. Now I need to subtract the critical habitat from the conservation reserve using the `difference` tool.",
+          "tool": "difference",
+          "tool_input": {
+            "geojson_names": "conservation_reserve",
+            "clip_geojson_name": "critical_habitat"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "conservation_reserve_difference"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated difference. Now I need to extract the boundary of the remaining area using the `boundary` tool.",
+          "tool": "boundary",
+          "tool_input": {
+            "geojson_names": "conservation_reserve_difference"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "conservation_reserve_difference_boundary"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted boundary. Now I need to simplify it for visualization using the `simplify` tool.",
+          "tool": "simplify",
+          "tool_input": {
+            "geojson_names": "conservation_reserve_difference_boundary",
+            "tolerance": 0.01
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "conservation_reserve_difference_boundary_simplified"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully simplified boundary. Now I need to calculate the boundary length using the `length` tool.",
+          "tool": "length",
+          "tool_input": {
+            "geojson_names": "conservation_reserve_difference_boundary_simplified"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [34567.89]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `covers` → `difference` → `boundary` → `simplify` → `length` has been completed successfully. The conservation reserve does cover the critical habitat, critical habitat subtracted from the reserve, boundary of the remaining area extracted, simplified for visualization, and the boundary length calculated as 34,567.89 meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合18 (disjoint → distance → envelope → buffer → intersects)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the mining_operation is disjoint from the water_source, calculate the distance between them, create a bounding box around the mining operation, add a 1800-meter buffer around the bounding box, and check if it intersects with the residential_community."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check disjointness, calculate distance, create bounding box, add buffer, and check intersection. This can be structured as: {Target A: mining_operation, Target B: water_source, Target C: residential_community, Operation: disjoint check + distance calculation + envelope creation + buffer addition + intersection check, Distance: 1800 meters}. This is an evaluation and configuration task involving spatial relationship analysis and geometric processing. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [disjoint → distance → envelope → buffer → intersects]. I need to check disjointness first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [disjoint → distance → envelope → buffer → intersects] tool chain. I need to first use `disjoint` to check if mining operation is disjoint from the water source.",
+          "tool": "disjoint",
+          "tool_input": {
+            "geojson_names": "mining_operation",
+            "other_geojson_name": "water_source"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The disjoint check returned true. Now I need to calculate the distance between them using the `distance` tool.",
+          "tool": "distance",
+          "tool_input": {
+            "geojson_names": "mining_operation",
+            "other_geojson_name": "water_source"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [9012.34]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated distance. Now I need to create a bounding box around the mining operation using the `envelope` tool.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "mining_operation"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "mining_operation_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to add a 1800-meter buffer around the bounding box using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "mining_operation_envelope",
+            "distance": 1800
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "mining_operation_envelope_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to check if it intersects with the residential community using the `intersects` tool.",
+          "tool": "intersects",
+          "tool_input": {
+            "geojson_names": "mining_operation_envelope_buffer",
+            "other_geojson_name": "residential_community"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": false
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `disjoint` → `distance` → `envelope` → `buffer` → `intersects` has been completed successfully. The mining operation is disjoint from the water source, the distance between them is 9,012.34 meters, a bounding box created around the mining operation, an 1800-meter buffer added around the bounding box, and confirmed that it does not intersect with the residential community.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合19 (crosses → intersection → convex_hull → envelope → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the gas_pipeline crosses the geological_fault, extract the crossing sections, create a convex hull around them, generate a bounding box around the hull, and calculate its area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check crossing, extract intersection, create convex hull, generate bounding box, and calculate area. This can be structured as: {Target A: gas_pipeline, Target B: geological_fault, Operation: crossing check + intersection extraction + convex hull creation + envelope generation + area calculation}. This is an evaluation and configuration task involving spatial relationship analysis, geometric transformation, and measurement. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [crosses → intersection → convex_hull → envelope → area]. I need to check crossing first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [crosses → intersection → convex_hull → envelope → area] tool chain. I need to first use `crosses` to check if gas pipeline crosses the geological fault.",
+          "tool": "crosses",
+          "tool_input": {
+            "geojson_names": "gas_pipeline",
+            "other_geojson_name": "geological_fault"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The crosses check returned true. Now I need to extract the crossing sections using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "gas_pipeline",
+            "clip_geojson_name": "geological_fault"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "gas_pipeline_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted intersection. Now I need to create a convex hull around them using the `convex_hull` tool.",
+          "tool": "convex_hull",
+          "tool_input": {
+            "geojson_names": "gas_pipeline_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "gas_pipeline_intersection_convex_hull"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created convex hull. Now I need to generate a bounding box around the hull using the `envelope` tool.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "gas_pipeline_intersection_convex_hull"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "gas_pipeline_intersection_convex_hull_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to calculate its area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "gas_pipeline_intersection_convex_hull_envelope"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 456789.01
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `crosses` → `intersection` → `convex_hull` → `envelope` → `area` has been completed successfully. The gas pipeline does cross the geological fault, crossing sections extracted, a convex hull created around them, a bounding box generated around the hull, and its area calculated as 456,789.01 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合20 (covered_by → union → boundary → buffer → length)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the wetland_patches are covered by the protection_boundary, merge all the patches, extract the boundary of the merged area, create a 400-meter buffer around it, and calculate the buffer's perimeter length."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check coverage, merge patches, extract boundary, create buffer, and calculate length. This can be structured as: {Target A: wetland_patches, Target B: protection_boundary, Operation: coverage check + union + boundary extraction + buffer creation + length calculation, Distance: 400 meters}. This is an evaluation and configuration task involving spatial relationship analysis, geometric processing, and measurement. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [covered_by → union → boundary → buffer → length]. I need to check coverage first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [covered_by → union → boundary → buffer → length] tool chain. I need to first use `covered_by` to check if wetland patches are covered by the protection boundary.",
+          "tool": "covered_by",
+          "tool_input": {
+            "geojson_names": "wetland_patches",
+            "other_geojson_name": "protection_boundary"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The covered_by check returned true. Now I need to merge all the wetland patches using the `union` tool.",
+          "tool": "union",
+          "tool_input": {
+            "geojson_name1": "wetland_patch1",
+            "geojson_name2": "wetland_patch2"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "wetland_patch1_union"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully merged wetland patches. Now I need to extract the boundary of the merged area using the `boundary` tool.",
+          "tool": "boundary",
+          "tool_input": {
+            "geojson_names": "wetland_patch1_union"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "wetland_patch1_union_boundary"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted boundary. Now I need to create a 400-meter buffer around it using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "wetland_patch1_union_boundary",
+            "distance": 400
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "wetland_patch1_union_boundary_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to calculate the buffer's perimeter length using the `length` tool.",
+          "tool": "length",
+          "tool_input": {
+            "geojson_names": "wetland_patch1_union_boundary_buffer"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [78901.23]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `covered_by` → `union` → `boundary` → `buffer` → `length` has been completed successfully. The wetland patches are covered by the protection boundary, all patches merged, boundary of the merged area extracted, a 400-meter buffer created around it, and the buffer's perimeter length calculated as 78,901.23 meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合21 (query_satellite → get_tle → get_orbit_velocity → get_satellite_footprint → intersection)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to query satellites with specific criteria, get TLE data for the selected satellite, calculate its orbital velocity, generate its satellite footprint for a time period, and find the intersection with the target_region."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to query satellites, get TLE data, calculate velocity, generate footprint, and find intersection. This can be structured as: {Target A: satellite query criteria, Target B: target_region, Operation: satellite query + TLE retrieval + velocity calculation + footprint generation + intersection calculation}. This is a discovery and evaluation task involving satellite search, orbital analysis, and spatial assessment. The process chain is [Task Phase → Discovery Phase → Evaluation Phase]. The tool chain is [query_satellite → get_tle → get_orbit_velocity → get_satellite_footprint → intersection]. I need to query satellites first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a discovery and evaluation task following the [query_satellite → get_tle → get_orbit_velocity → get_satellite_footprint → intersection] tool chain. I need to first use `query_satellite` to search for satellites with specific criteria.",
+          "tool": "query_satellite",
+          "tool_input": {
+            "criteria": {
+              "type": "earth_observation",
+              "altitude_range": [500, 800]
+            }
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": ["LANDSAT-9", "SENTINEL-2A", "WORLDVIEW-3"]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully queried satellites. Now I need to get TLE data for LANDSAT-9 using the `get_tle` tool.",
+          "tool": "get_tle",
+          "tool_input": {
+            "satellite_names": ["LANDSAT-9"]
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "LANDSAT-9": "1 49260U 21088A   25001.50000000 -.00000145  00000-0 -46789-5 0  9995\n2 49260  98.2105 353.4567 0001234  91.2345 268.8901 14.57089432123456"
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully obtained TLE data. Now I need to calculate its orbital velocity using the `get_orbit_velocity` tool.",
+          "tool": "get_orbit_velocity",
+          "tool_input": {
+            "tle": {
+              "LANDSAT-9": "1 49260U 21088A   25001.50000000 -.00000145  00000-0 -46789-5 0  9995\n2 49260  98.2105 353.4567 0001234  91.2345 268.8901 14.57089432123456"
+            }
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "LANDSAT-9": 7654.32
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated orbital velocity. Now I need to generate its satellite footprint using the `get_satellite_footprint` tool.",
+          "tool": "get_satellite_footprint",
+          "tool_input": {
+            "tle_dict": {
+              "LANDSAT-9": "1 49260U 21088A   25001.50000000 -.00000145  00000-0 -46789-5 0  9995\n2 49260  98.2105 353.4567 0001234  91.2345 268.8901 14.57089432123456"
+            },
+            "start_time_str": "2025-01-16 09:00:00.000",
+            "end_time_str": "2025-01-16 09:45:00.000"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "LANDSAT-9_footprint"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully generated satellite footprint. Now I need to find the intersection with target_region using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "LANDSAT-9_footprint",
+            "clip_geojson_name": "target_region"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "LANDSAT-9_footprint_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `query_satellite` → `get_tle` → `get_orbit_velocity` → `get_satellite_footprint` → `intersection` has been completed successfully. Satellites queried with specific criteria, LANDSAT-9 selected and TLE data obtained, orbital velocity calculated as 7,654.32 m/s, satellite footprint generated for the specified time period, and intersection with target region extracted.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合22 (clip_by_rect → simplify → convex_hull → buffer → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to clip the survey_area by a rectangular boundary, simplify the clipped geometry, create a convex hull around it, add a 700-meter buffer, and calculate the final area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to clip by rectangle, simplify geometry, create convex hull, add buffer, and calculate area. This can be structured as: {Target A: survey_area, Operation: rectangular clipping + simplification + convex hull creation + buffer addition + area calculation, Distance: 700 meters}. This is a configuration task involving geometric clipping, simplification, transformation, and measurement. The process chain is [Task Phase → Configuration Phase]. The tool chain is [clip_by_rect → simplify → convex_hull → buffer → area]. I need to clip by rectangle first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration task following the [clip_by_rect → simplify → convex_hull → buffer → area] tool chain. I need to first use `clip_by_rect` to clip the survey area by a rectangular boundary.",
+          "tool": "clip_by_rect",
+          "tool_input": {
+            "geojson_names": "survey_area",
+            "min_x": 114.0,
+            "min_y": 30.0,
+            "max_x": 115.0,
+            "max_y": 31.0
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "survey_area_clipped"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully clipped by rectangle. Now I need to simplify the clipped geometry using the `simplify` tool.",
+          "tool": "simplify",
+          "tool_input": {
+            "geojson_names": "survey_area_clipped",
+            "tolerance": 0.01
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "survey_area_clipped_simplified"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully simplified geometry. Now I need to create a convex hull around it using the `convex_hull` tool.",
+          "tool": "convex_hull",
+          "tool_input": {
+            "geojson_names": "survey_area_clipped_simplified"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "survey_area_clipped_simplified_convex_hull"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created convex hull. Now I need to add a 700-meter buffer using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "survey_area_clipped_simplified_convex_hull",
+            "distance": 700
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "survey_area_clipped_simplified_convex_hull_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to calculate the final area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "survey_area_clipped_simplified_convex_hull_buffer"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 5432109.87
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `clip_by_rect` → `simplify` → `convex_hull` → `buffer` → `area` has been completed successfully. The survey area has been clipped by rectangular boundary, clipped geometry simplified, a convex hull created around it, a 700-meter buffer added, and the final area calculated as 5,432,109.87 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合23 (get_orbit_radius → get_satellite_footprint → union → difference → is_valid)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to calculate the orbital radius from TLE data, generate satellite footprints for multiple passes, merge all footprints, subtract the excluded_zones, and validate the resulting geometry."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to calculate orbital radius, generate footprints, merge them, subtract exclusions, and validate result. This can be structured as: {Target A: satellite TLE, Target B: excluded_zones, Operation: radius calculation + footprint generation + union + difference + validation}. This is a discovery and configuration task involving orbital analysis, geometric processing, and quality validation. The process chain is [Task Phase → Discovery Phase → Configuration Phase]. The tool chain is [get_orbit_radius → get_satellite_footprint → union → difference → is_valid]. I need to calculate orbital radius first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a discovery and configuration task following the [get_orbit_radius → get_satellite_footprint → union → difference → is_valid] tool chain. I need to first use `get_orbit_radius` to calculate the orbital radius from TLE data.",
+          "tool": "get_orbit_radius",
+          "tool_input": {
+            "tle": {
+              "SPOT-7": "1 40053U 14034A   25001.50000000  .00000234  00000-0  56789-4 0  9998\n2 40053  98.2567 123.4567 0001678  87.6543 272.3456 14.76543210987654"
+            }
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "SPOT-7": 6958.14
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated orbital radius. Now I need to generate satellite footprints for multiple passes using the `get_satellite_footprint` tool.",
+          "tool": "get_satellite_footprint",
+          "tool_input": {
+            "tle_dict": {
+              "SPOT-7": "1 40053U 14034A   25001.50000000  .00000234  00000-0  56789-4 0  9998\n2 40053  98.2567 123.4567 0001678  87.6543 272.3456 14.76543210987654"
+            },
+            "start_time_str": "2025-01-16 14:00:00.000",
+            "end_time_str": "2025-01-16 16:00:00.000"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "SPOT-7_footprint"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully generated satellite footprints. Now I need to merge all footprints using the `union` tool.",
+          "tool": "union",
+          "tool_input": {
+            "geojson_name1": "SPOT-7_footprint_pass1",
+            "geojson_name2": "SPOT-7_footprint_pass2"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "SPOT-7_footprint_pass1_union"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully merged footprints. Now I need to subtract the excluded zones using the `difference` tool.",
+          "tool": "difference",
+          "tool_input": {
+            "geojson_names": "SPOT-7_footprint_pass1_union",
+            "clip_geojson_name": "excluded_zones"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "SPOT-7_footprint_pass1_union_difference"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated difference. Now I need to validate the resulting geometry using the `is_valid` tool.",
+          "tool": "is_valid",
+          "tool_input": {
+            "geojson_names": "SPOT-7_footprint_pass1_union_difference"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [true]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `get_orbit_radius` → `get_satellite_footprint` → `union` → `difference` → `is_valid` has been completed successfully. The orbital radius calculated as 6,958.14 km, satellite footprints generated for multiple passes, all footprints merged, excluded zones subtracted, and the resulting geometry validated as geometrically valid.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合24 (get_observation_overlap → intersection → envelope → centroid → distance)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to calculate the observation overlap between two satellites, extract the intersection with the study_area, create a bounding box around it, find its centroid, and calculate the distance to the ground_station."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to calculate observation overlap, extract intersection, create bounding box, find centroid, and calculate distance. This can be structured as: {Target A: satellite1, Target B: satellite2, Target C: study_area, Target D: ground_station, Operation: overlap calculation + intersection extraction + envelope creation + centroid calculation + distance measurement}. This is a discovery and evaluation task involving satellite coordination analysis and spatial measurement. The process chain is [Task Phase → Discovery Phase → Evaluation Phase]. The tool chain is [get_observation_overlap → intersection → envelope → centroid → distance]. I need to calculate observation overlap first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a discovery and evaluation task following the [get_observation_overlap → intersection → envelope → centroid → distance] tool chain. I need to first use `get_observation_overlap` to calculate the observation overlap between two satellites.",
+          "tool": "get_observation_overlap",
+          "tool_input": {
+            "satellite1_tle": {
+              "MODIS-TERRA": "1 25994U 99068A   25001.50000000  .00000678  00000-0  34567-4 0  9991\n2 25994  98.2134 234.5678 0000987  76.5432 283.4567 14.23456789012345"
+            },
+            "satellite2_tle": {
+              "MODIS-AQUA": "1 27424U 02022A   25001.50000000  .00000789  00000-0  45678-4 0  9992\n2 27424  98.2098 345.6789 0001123  89.6543 270.3456 14.34567890123456"
+            },
+            "start_time_str": "2025-01-16 11:00:00.000",
+            "end_time_str": "2025-01-16 13:00:00.000"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "MODIS-TERRA_MODIS-AQUA_overlap"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated observation overlap. Now I need to extract the intersection with study area using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "MODIS-TERRA_MODIS-AQUA_overlap",
+            "clip_geojson_name": "study_area"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "MODIS-TERRA_MODIS-AQUA_overlap_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted intersection. Now I need to create a bounding box around it using the `envelope` tool.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "MODIS-TERRA_MODIS-AQUA_overlap_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "MODIS-TERRA_MODIS-AQUA_overlap_intersection_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to find its centroid using the `centroid` tool.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "MODIS-TERRA_MODIS-AQUA_overlap_intersection_envelope"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "MODIS-TERRA_MODIS-AQUA_overlap_intersection_envelope_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to calculate the distance to ground station using the `distance` tool.",
+          "tool": "distance",
+          "tool_input": {
+            "geojson_names": "MODIS-TERRA_MODIS-AQUA_overlap_intersection_envelope_centroid",
+            "other_geojson_name": "ground_station"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [12345.67]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `get_observation_overlap` → `intersection` → `envelope` → `centroid` → `distance` has been completed successfully. Observation overlap calculated between MODIS-TERRA and MODIS-AQUA satellites, intersection with study area extracted, bounding box created around it, its centroid calculated, and the distance to ground station is 12,345.67 meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合25 (boundary → union → simplify → buffer → intersects)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to extract the boundary of the administrative_zones, merge all boundaries, simplify the merged boundary, create a 900-meter buffer around it, and check if it intersects with the protected_areas."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to extract boundary, merge boundaries, simplify result, create buffer, and check intersection. This can be structured as: {Target A: administrative_zones, Target B: protected_areas, Operation: boundary extraction + union + simplification + buffer creation + intersection check, Distance: 900 meters}. This is a configuration and evaluation task involving boundary processing, geometric transformation, and spatial assessment. The process chain is [Task Phase → Configuration Phase → Evaluation Phase]. The tool chain is [boundary → union → simplify → buffer → intersects]. I need to extract boundary first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration and evaluation task following the [boundary → union → simplify → buffer → intersects] tool chain. I need to first use `boundary` to extract the boundary of the administrative zones.",
+          "tool": "boundary",
+          "tool_input": {
+            "geojson_names": "administrative_zones"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "administrative_zones_boundary"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted boundary. Now I need to merge all boundaries using the `union` tool.",
+          "tool": "union",
+          "tool_input": {
+            "geojson_name1": "zone1_boundary",
+            "geojson_name2": "zone2_boundary"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "zone1_boundary_union"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully merged boundaries. Now I need to simplify the merged boundary using the `simplify` tool.",
+          "tool": "simplify",
+          "tool_input": {
+            "geojson_names": "zone1_boundary_union",
+            "tolerance": 0.01
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "zone1_boundary_union_simplified"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully simplified boundary. Now I need to create a 900-meter buffer around it using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "zone1_boundary_union_simplified",
+            "distance": 900
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "zone1_boundary_union_simplified_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to check if it intersects with protected areas using the `intersects` tool.",
+          "tool": "intersects",
+          "tool_input": {
+            "geojson_names": "zone1_boundary_union_simplified_buffer",
+            "other_geojson_name": "protected_areas"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `boundary` → `union` → `simplify` → `buffer` → `intersects` has been completed successfully. Administrative zone boundaries extracted, all boundaries merged, merged boundary simplified, a 900-meter buffer created around it, and confirmed that it intersects with protected areas.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合26 (envelope → intersection → convex_hull → difference → area)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to create a bounding box around the sensor_network, find its intersection with the coverage_region, create a convex hull around the intersection, subtract the no_fly_zones, and calculate the remaining area."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to create bounding box, find intersection, create convex hull, subtract areas, and calculate remaining area. This can be structured as: {Target A: sensor_network, Target B: coverage_region, Target C: no_fly_zones, Operation: envelope creation + intersection calculation + convex hull creation + difference calculation + area calculation}. This is a configuration and evaluation task involving geometric processing and spatial measurement. The process chain is [Task Phase → Configuration Phase → Evaluation Phase]. The tool chain is [envelope → intersection → convex_hull → difference → area]. I need to create bounding box first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is a configuration and evaluation task following the [envelope → intersection → convex_hull → difference → area] tool chain. I need to first use `envelope` to create a bounding box around the sensor network.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "sensor_network"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "sensor_network_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to find its intersection with coverage region using the `intersection` tool.",
+          "tool": "intersection",
+          "tool_input": {
+            "geojson_names": "sensor_network_envelope",
+            "clip_geojson_name": "coverage_region"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "sensor_network_envelope_intersection"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated intersection. Now I need to create a convex hull around the intersection using the `convex_hull` tool.",
+          "tool": "convex_hull",
+          "tool_input": {
+            "geojson_names": "sensor_network_envelope_intersection"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "sensor_network_envelope_intersection_convex_hull"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created convex hull. Now I need to subtract the no-fly zones using the `difference` tool.",
+          "tool": "difference",
+          "tool_input": {
+            "geojson_names": "sensor_network_envelope_intersection_convex_hull",
+            "clip_geojson_name": "no_fly_zones"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "sensor_network_envelope_intersection_convex_hull_difference"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated difference. Now I need to calculate the remaining area using the `area` tool.",
+          "tool": "area",
+          "tool_input": {
+            "geojson_names": "sensor_network_envelope_intersection_convex_hull_difference"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": {
+          "area": 3456789.01
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `envelope` → `intersection` → `convex_hull` → `difference` → `area` has been completed successfully. A bounding box created around the sensor network, its intersection with coverage region found, a convex hull created around the intersection, no-fly zones subtracted, and the remaining area calculated as 3,456,789.01 square meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合27 (covered_by → centroid → buffer → union → length)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the monitoring_points are covered by the surveillance_zone, find the centroid of the points, create a 1300-meter buffer around the centroid, merge it with the existing_coverage, and calculate the total perimeter length."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check coverage, find centroid, create buffer, merge areas, and calculate perimeter. This can be structured as: {Target A: monitoring_points, Target B: surveillance_zone, Target C: existing_coverage, Operation: coverage check + centroid calculation + buffer creation + union + length calculation, Distance: 1300 meters}. This is an evaluation and configuration task involving spatial relationship analysis, geometric transformation, and measurement. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [covered_by → centroid → buffer → union → length]. I need to check coverage first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [covered_by → centroid → buffer → union → length] tool chain. I need to first use `covered_by` to check if monitoring points are covered by the surveillance zone.",
+          "tool": "covered_by",
+          "tool_input": {
+            "geojson_names": "monitoring_points",
+            "other_geojson_name": "surveillance_zone"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The covered_by check returned true. Now I need to find the centroid of the monitoring points using the `centroid` tool.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "monitoring_points"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "monitoring_points_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to create a 1300-meter buffer around the centroid using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "monitoring_points_centroid",
+            "distance": 1300
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "monitoring_points_centroid_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created buffer. Now I need to merge it with existing coverage using the `union` tool.",
+          "tool": "union",
+          "tool_input": {
+            "geojson_name1": "monitoring_points_centroid_buffer",
+            "geojson_name2": "existing_coverage"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "monitoring_points_centroid_buffer_union"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully merged areas. Now I need to calculate the total perimeter length using the `length` tool.",
+          "tool": "length",
+          "tool_input": {
+            "geojson_names": "monitoring_points_centroid_buffer_union"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [56789.12]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `covered_by` → `centroid` → `buffer` → `union` → `length` has been completed successfully. The monitoring points are covered by the surveillance zone, centroid of the points calculated, a 1300-meter buffer created around the centroid, merged with existing coverage, and the total perimeter length calculated as 56,789.12 meters.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合28 (intersects → difference → boundary → envelope → overlaps)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the flight_path intersects with the restricted_airspace, subtract the airspace from the path, extract the boundary of the remaining path, create a bounding box around it, and check if it overlaps with the emergency_zones."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check intersection, subtract area, extract boundary, create bounding box, and check overlap. This can be structured as: {Target A: flight_path, Target B: restricted_airspace, Target C: emergency_zones, Operation: intersection check + difference calculation + boundary extraction + envelope creation + overlap check}. This is an evaluation and configuration task involving spatial relationship analysis and geometric processing. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [intersects → difference → boundary → envelope → overlaps]. I need to check intersection first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [intersects → difference → boundary → envelope → overlaps] tool chain. I need to first use `intersects` to check if flight path intersects with restricted airspace.",
+          "tool": "intersects",
+          "tool_input": {
+            "geojson_names": "flight_path",
+            "other_geojson_name": "restricted_airspace"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The intersects check returned true. Now I need to subtract the restricted airspace from the flight path using the `difference` tool.",
+          "tool": "difference",
+          "tool_input": {
+            "geojson_names": "flight_path",
+            "clip_geojson_name": "restricted_airspace"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "flight_path_difference"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated difference. Now I need to extract the boundary of the remaining path using the `boundary` tool.",
+          "tool": "boundary",
+          "tool_input": {
+            "geojson_names": "flight_path_difference"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "flight_path_difference_boundary"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully extracted boundary. Now I need to create a bounding box around it using the `envelope` tool.",
+          "tool": "envelope",
+          "tool_input": {
+            "geojson_names": "flight_path_difference_boundary"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "flight_path_difference_boundary_envelope"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created envelope. Now I need to check if it overlaps with emergency zones using the `overlaps` tool.",
+          "tool": "overlaps",
+          "tool_input": {
+            "geojson_names": "flight_path_difference_boundary_envelope",
+            "other_geojson_name": "emergency_zones"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": false
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `intersects` → `difference` → `boundary` → `envelope` → `overlaps` has been completed successfully. The flight path does intersect with restricted airspace, restricted airspace subtracted from the path, boundary of the remaining path extracted, a bounding box created around it, and confirmed that it does not overlap with emergency zones.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合29 (within → convex_hull → centroid → distance → buffer)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the observation_targets are within the mission_area, create a convex hull around the targets, find its centroid, calculate the distance to the command_center, and create a buffer with that distance around the centroid."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check containment, create convex hull, find centroid, calculate distance, and create buffer with calculated distance. This can be structured as: {Target A: observation_targets, Target B: mission_area, Target C: command_center, Operation: containment check + convex hull creation + centroid calculation + distance measurement + buffer creation}. This is an evaluation and configuration task involving spatial relationship analysis, geometric transformation, and measurement-based buffer creation. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [within → convex_hull → centroid → distance → buffer]. I need to check containment first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [within → convex_hull → centroid → distance → buffer] tool chain. I need to first use `within` to check if observation targets are within the mission area.",
+          "tool": "within",
+          "tool_input": {
+            "geojson_names": "observation_targets",
+            "other_geojson_name": "mission_area"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The within check returned true. Now I need to create a convex hull around the targets using the `convex_hull` tool.",
+          "tool": "convex_hull",
+          "tool_input": {
+            "geojson_names": "observation_targets"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "observation_targets_convex_hull"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully created convex hull. Now I need to find its centroid using the `centroid` tool.",
+          "tool": "centroid",
+          "tool_input": {
+            "geojson_names": "observation_targets_convex_hull"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "observation_targets_convex_hull_centroid"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated centroid. Now I need to calculate the distance to command center using the `distance` tool.",
+          "tool": "distance",
+          "tool_input": {
+            "geojson_names": "observation_targets_convex_hull_centroid",
+            "other_geojson_name": "command_center"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": [4567.89]
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully calculated distance. Now I need to create a buffer with that distance around the centroid using the `buffer` tool.",
+          "tool": "buffer",
+          "tool_input": {
+            "geojson_names": "observation_targets_convex_hull_centroid",
+            "distance": 4567.89
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "observation_targets_convex_hull_centroid_buffer"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `within` → `convex_hull` → `centroid` → `distance` → `buffer` has been completed successfully. The observation targets are within the mission area, a convex hull created around the targets, its centroid calculated, distance to command center measured as 4,567.89 meters, and a buffer with that distance created around the centroid.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  },
+  {
+    "template_name": "5工具组合30 (touches → union → clip_by_rect → simplify → contains)",
+    "template_content": [
+      {
+        "from": "System",
+        "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. [Same system prompt as above]"
+      },
+      {
+        "from": "User",
+        "value": "I need to check if the infrastructure_lines touch the service_areas, merge all the areas, clip the result by a rectangular region, simplify the clipped geometry, and check if it contains the critical_facilities."
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The user wants to check touching, merge areas, clip by rectangle, simplify geometry, and check containment. This can be structured as: {Target A: infrastructure_lines, Target B: service_areas, Target C: critical_facilities, Operation: touch check + union + rectangular clipping + simplification + containment check}. This is an evaluation and configuration task involving spatial relationship analysis, geometric processing, and final containment verification. The process chain is [Task Phase → Evaluation Phase → Configuration Phase]. The tool chain is [touches → union → clip_by_rect → simplify → contains]. I need to check touching first."
+        }
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "This is an evaluation and configuration task following the [touches → union → clip_by_rect → simplify → contains] tool chain. I need to first use `touches` to check if infrastructure lines touch the service areas.",
+          "tool": "touches",
+          "tool_input": {
+            "geojson_names": "infrastructure_lines",
+            "other_geojson_name": "service_areas"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The touches check returned true. Now I need to merge all the service areas using the `union` tool.",
+          "tool": "union",
+          "tool_input": {
+            "geojson_name1": "service_area1",
+            "geojson_name2": "service_area2"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "service_area1_union"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully merged areas. Now I need to clip the result by a rectangular region using the `clip_by_rect` tool.",
+          "tool": "clip_by_rect",
+          "tool_input": {
+            "geojson_names": "service_area1_union",
+            "min_x": 113.5,
+            "min_y": 29.5,
+            "max_x": 115.5,
+            "max_y": 31.5
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "service_area1_union_clipped"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully clipped by rectangle. Now I need to simplify the clipped geometry using the `simplify` tool.",
+          "tool": "simplify",
+          "tool_input": {
+            "geojson_names": "service_area1_union_clipped",
+            "tolerance": 0.01
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": "service_area1_union_clipped_simplified"
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "Successfully simplified geometry. Now I need to check if it contains the critical facilities using the `contains` tool.",
+          "tool": "contains",
+          "tool_input": {
+            "geojson_names": "service_area1_union_clipped_simplified",
+            "other_geojson_name": "critical_facilities"
+          }
+        }
+      },
+      {
+        "from": "Tool",
+        "value": true
+      },
+      {
+        "from": "Assistant",
+        "value": {
+          "thought": "The tool chain `touches` → `union` → `clip_by_rect` → `simplify` → `contains` has been completed successfully. The infrastructure lines do touch the service areas, all areas merged, result clipped by rectangular region, clipped geometry simplified, and confirmed that it contains the critical facilities.",
+          "tool": "Finish",
+          "tool_input": {}
+        }
+      }
+    ]
+  }
+]

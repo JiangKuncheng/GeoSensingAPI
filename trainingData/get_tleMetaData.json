@@ -75,12 +75,12 @@
   },
   "示例": [
     {
-      "思考": "用户需要获取若干候选卫星的轨道覆盖以便后续过境筛选。根据前文分析，当前执行的任务是一个工具链条为[任务阶段->发现阶段]的任务。当前任务链条处于发现阶段。为了继续，我需要调用 `get_tle` 函数来获取数据库中卫星的TLE数据。这个函数需要卫星的全名作为输入，才能获取结果。获得get_tle工具的输出后需要将get_tle的输出给get_observation_lace调用来计算卫星在给定时间内的覆盖",
+      "思考": "用户需要获取若干候选卫星的轨道覆盖以便后续过境筛选。根据前文分析，当前任务具有工具链条[任务/需求阶段 → 发现阶段]。当前任务链条处于发现阶段。`get_tle` 工具可以通过提供卫星名称来检索给定卫星的TLE数据。因此，我将调用 `get_tle` 工具来获取数据库中卫星的TLE数据。这个工具需要卫星的全名作为输入。一旦获得 `get_tle` 的输出，就不需要进一步的工具了。",
       "工具": "get_tle",
       "输入": { "卫星名称": ["LANDSAT 8", "SENTINEL-2A"] }
     },
     {
-      "思考": "用户需要ISS当前的TLE以计算过境时间。根据前文分析，当前执行的任务是一个工具链条为[任务阶段->发现阶段]的任务。当前任务链条处于发现阶段。为了继续，我需要调用 `get_tle` 函数来获取ISS卫星的TLE数据。这个函数需要卫星的全名作为输入，才能获取结果。获得get_tle工具的输出后，需要将get_tle的输出给get_observation_lace调用来计算卫星在给定时间内的过境。",
+      "思考": "用户需要ISS当前的TLE以计算过境时间。根据前文分析，当前任务具有工具链条[任务/需求阶段 → 发现阶段]。当前任务链条处于发现阶段。`get_tle` 工具可以通过提供卫星名称来检索给定卫星的TLE数据。因此，我将调用 `get_tle` 工具来获取ISS卫星的TLE数据。这个工具需要卫星的全名作为输入。一旦获得 `get_tle` 的输出，就不需要进一步的工具了。",
       "工具": "get_tle",
       "输入": { "卫星名称": "ISS (ZARYA)" }
     }
@@ -162,12 +162,12 @@
   },
   "examples": [
     {
-      "thought": "The user needs to retrieve the orbital coverage for several candidate satellites in order to proceed with the subsequent pass filtering. Based on previous analysis, the current task follows a toolchain of [Task/Requirement Phase -> Discovery Phase]. The task is currently in the Discovery Phase. To proceed, I need to call the `get_tle` function to retrieve the TLE data for the satellites in the database. This function requires the full satellite name as input to retrieve the result. After obtaining the output from the get_tle tool, it will be passed to the get_observation_lace tool to calculate satellite coverage at a given time.",
+      "thought": "The user needs to retrieve the orbital coverage for several candidate satellites in order to proceed with the subsequent pass filtering. Based on previous analysis, the current task has a process chain [Task/Requirement Phase → Discovery Phase]. The current task chain is in the discovery phase. The `get_tle` tool can retrieve TLE data for a given satellite by providing the satellite name. Therefore, I will call the `get_tle` tool to retrieve the TLE data for the satellites in the database. This tool requires the full satellite name as input. Once the `get_tle` output is obtained, no further tools are needed.",
       "tool": "get_tle",
       "input": { "satellite_names": ["LANDSAT 8", "SENTINEL-2A"] }
     },
     {
-      "thought": "The user needs the current TLE for ISS to calculate the pass times. Based on previous analysis, the current task follows a toolchain of [Task/Requirement Phase -> Discovery Phase]. The task is currently in the Discovery Phase. To proceed, I need to call the `get_tle` function to retrieve the TLE data for the ISS satellite. This function requires the full name of the satellite as input to retrieve the result. After obtaining the output from the get_tle tool, it will be passed to the get_observation_lace tool to calculate the satellite's passes at a given time.",
+      "thought": "The user needs the current TLE for ISS to calculate the pass times. Based on previous analysis, the current task has a process chain [Task/Requirement Phase → Discovery Phase]. The current task chain is in the discovery phase. The `get_tle` tool can retrieve TLE data for a given satellite by providing the satellite name. Therefore, I will call the `get_tle` tool to retrieve the TLE data for the ISS satellite. This tool requires the full name of the satellite as input. Once the `get_tle` output is obtained, no further tools are needed.",
       "tool": "get_tle",
       "input": { "satellite_names": "ISS (ZARYA)" }
     }

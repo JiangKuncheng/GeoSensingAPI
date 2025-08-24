@@ -1,0 +1,45 @@
+[{
+  "from": "System",
+  "value": "You are a satellite observation planning expert. Your task is to carefully and step-by-step call tools to assist in completing observation planning tasks. The entire task chain is divided into four stages:\n\n1. **Task/Requirement Phase**:\n   - Step 1.1: Transform the user’s abstract description into a concrete observation requirement.\n   - Step 1.2: Determine whether the task belongs to a *discovery task*, *evaluation task*, or *configuration task*.\nExplanation:\na. Discovery tasks end at the discovery phase, with the typical chain [Task Phase → Discovery Phase].\nb. Evaluation tasks end at the evaluation phase. Possible chains include [Task → Discovery → Configuration → Evaluation], [Task → Evaluation], or [Task → Discovery → Configuration → Evaluation].\nc. Configuration tasks end at the configuration phase. Possible chains include [Task → Discovery → Configuration], [Task → Evaluation → Discovery → Configuration], or [Task → Configuration].\n\n2. **Discovery Phase**:\n   - Based on the structured requirement, use qualitative matching or quantitative filtering tools to identify **which sensors might** accomplish the task. This is a coarse filtering stage, without performance evaluation.\n\n3. **Evaluation Phase**:\n   - For the sensors filtered in the discovery phase, use discrete or coupled tools to quantitatively evaluate whether they can fulfill the task under defined metrics.\n\n4. **Configuration Phase**:\n   - If existing sensors are insufficient, perform sensor **augmentation or replacement** to meet specific task goals, e.g., minimum spatial coverage. The configuration phase always ends configuration tasks.\n\n**Important Behavioral Norms**:\n- Before calling any tool, you must carefully reason. **Every output must first include a `thought` field** explaining:\n  - What the current task is.\n  - Which phase of the task chain you are in.\n  - Which type of tool should be used in this phase.\n  - Why this tool is needed based on the task requirement.\n- For the tool you call, what should the input be, and which tools might be used after the output?\n- How to choose the tool’s output — whether to use all the data or only part of it.\n- After `thought`, if necessary, output the tool call and its input.\n\n**Example**:\n\n✅ Correct output:\n```json\n[\n  {\n    \"thought\": \"Based on the user’s input, I first need to determine the task type. The user wants to find which sensors can observe a region during a specific time, which is a discovery task. We are now in the discovery phase, and I need to filter candidate sensors according to spatiotemporal constraints. For this, I will call the `filter_by_temporal_window` tool.\"\n  },\n  {\n    \"tool\": \"filter_by_temporal_window\",\n    \"input\": {\n      \"start_time\": \"2025-08-01T00:00:00Z\",\n      \"end_time\": \"2025-08-02T00:00:00Z\"\n    }\n  }\n]\n```\n\n🔍 Why this is correct:\n- It first explains context in the `thought` field.\n- The model correctly identifies the task as a *discovery task*.\n- It selects the correct phase and tool (`filter_by_temporal_window`) to filter candidates.\n- This ensures step-by-step reasoning and proper tool usage.\n\n❌ Incorrect output:\n```json\n{\n  \"tool\": \"get_orbit_inclination\",\n  \"input\": {\n    \"tle\": { \"satellite1\": \"tleOfSat1\" }\n  }\n}\n```\n\n❌ Why this is wrong:\n- Missing the `thought` explanation, unclear intent.\n- Did not identify the task type or phase.\n- The tool was directly called without confirming if `get_orbit_inclination` is appropriate for this phase.\n- This may lead to misuse of tools, wasted calls, or incorrect task progress.\n\n✅ Always think before acting. If the task is complete, use `Finish`; if it cannot be solved, use `give_up_and_restart`."
+},
+{
+  "from": "User",
+  "value": "Can you get the current TLE data for the NOAA-15 satellite?"
+},
+{
+  "from": "Assistant",
+  "value": {
+    "thought": "I first need to transform the user’s task into a concrete requirement and determine whether it is a discovery, evaluation, or configuration task. The user input is: \"I need the current TLE data for NOAA-15.\" The structured requirement can be expressed as: {Time window: today}. This task is classified as a discovery task with a process chain [Task/Requirement Phase → Discovery Phase]"
+  }
+},
+{
+  "from": "Assistant",
+  "value": {
+    "thought": "The user needs the TLE data for NOAA-15. Based on previous analysis, the current task has a process chain [Task/Requirement Phase → Discovery Phase]. The current task chain is in the discovery phase. The `get_tle` tool can retrieve TLE data for a given satellite by providing the satellite name. Therefore, I will call the `get_tle` tool to retrieve the TLE data for NOAA-15. This tool requires the full satellite name as input. Once the `get_tle` output is obtained, no further tools are needed.",
+    "tool": "get_tle",
+    "tool_input": {
+      "satellite_names": "NOAA-15"
+    }
+  }
+},
+{
+  "from": "Tool",
+  "value": {
+    "NOAA-15": "[1 25338U 24193A 23695.343467 0.00000500 00000-0 29086-4 0 99952 25338 29.0737 155.9293 5696000 304.4301 45.2976 11.1934344111286]"
+  }
+},
+{
+  "from": "Assistant",
+  "value": {
+    "thought": "The tool returned the TLE data for the NOAA-15 satellite. I now have enough information to answer the user’s question.",
+    "tool": "Finish",
+    "tool_input": {}
+  }
+},
+{
+  "from": "Assistant",
+  "value": "Thought: The tool returned the TLE data for the NOAA-15 satellite. I now have enough information to answer the user’s question.",
+  "tool": "Finish",
+  "tool_input": {}
+}]
+

@@ -2,10 +2,11 @@ import geopandas as gpd
 import json
 import os
 from typing import Union, List, Dict
-from shapely.geometry import shape
+from shapely.geometry import shape, mapping
+from datetime import datetime
 
 
-def offset_curve(geojson_names: Union[str, List[str]], distance: float, side: str = 'right', resolution: int = 16, join_style: int = 1, mitre_limit: float = 5.0) -> Union[List[str], Dict[str, List[str]]]:
+def offset_curve(geojson_names: Union[str, List[str]], distance: float, side: str = 'right', resolution: int = 16, join_style: int = 1, mitre_limit: float = 5.0) -> Union[str, Dict[str, str]]:
     """
     为一个或多个 GeoJSON 文件中的 LineString/MultiLineString 几何体生成 offset curve
 
@@ -20,9 +21,9 @@ def offset_curve(geojson_names: Union[str, List[str]], distance: float, side: st
         mitre_limit (float): miter 连接样式时的限制 默认5.0
 
     返回:
-        Union[List[str], Dict[str, List[str]]]:
-            - 如果传入单个名称，返回对应的 WKT 字符串列表
-            - 如果传入多个名称，返回字典，键为输入文件名，值为对应 WKT 字符串列表
+        Union[str, Dict[str, str]]:
+            - 如果传入单个名称，返回生成的 GeoJSON 文件路径
+            - 如果传入多个名称，返回字典，键为输入文件名，值为对应生成的 GeoJSON 文件路径
     """
     # 如果是单个字符串，转为列表处理
     is_single = isinstance(geojson_names, str)
@@ -64,7 +65,41 @@ def offset_curve(geojson_names: Union[str, List[str]], distance: float, side: st
             result = gseries.offset_curve(distance=distance, side=side, resolution=resolution, join_style=join_style,
                                           mitre_limit=mitre_limit)
 
-            results[name] = [geom.wkt for geom in result]
+            # 生成输出文件名
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_filename = f"{name}_offset_{side}_{distance}_{timestamp}"
+            output_path = os.path.join("geojson", f"{output_filename}.geojson")
+            
+            # 创建 GeoJSON 特征集合
+            features = []
+            for i, geom in enumerate(result):
+                if geom and not geom.is_empty:
+                    feature = {
+                        "type": "Feature",
+                        "geometry": mapping(geom),
+                        "properties": {
+                            "source": name,
+                            "offset_distance": distance,
+                            "offset_side": side,
+                            "resolution": resolution,
+                            "join_style": join_style,
+                            "mitre_limit": mitre_limit,
+                            "feature_id": i
+                        }
+                    }
+                    features.append(feature)
+            
+            # 创建 GeoJSON 对象
+            geojson_output = {
+                "type": "FeatureCollection",
+                "features": features
+            }
+            
+            # 保存到文件
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(geojson_output, f, ensure_ascii=False, indent=2)
+            
+            results[name] = output_filename
             
         except Exception as e:
             results[name] = f"Error: {str(e)}"

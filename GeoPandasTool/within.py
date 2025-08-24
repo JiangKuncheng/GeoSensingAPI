@@ -25,13 +25,13 @@ def within(geojson_names: Union[str, List[str]], container_geojson_name: str) ->
     results = {}
 
     # 读取容器 GeoJSON 文件
-    container_path = os.path.join("geojson", f"{container_geojson_name}.geojson")
+    container_path = os.path.abspath(os.path.join("geojson", f"{container_geojson_name}.geojson"))
     with open(container_path, "r", encoding="utf-8") as f:
         container_geojson_data = json.load(f)
     container_geometries = [shape(feature["geometry"]) for feature in container_geojson_data["features"]]
 
     for name in names:
-        input_path = os.path.join("geojson", f"{name}.geojson")
+        input_path = os.path.abspath(os.path.join("geojson", f"{name}.geojson"))
         
         try:
             # 读取输入GeoJSON文件

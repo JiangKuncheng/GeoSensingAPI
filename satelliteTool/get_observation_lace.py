@@ -2,38 +2,71 @@ import geojson
 from skyfield.api import EarthSatellite, Loader
 from datetime import datetime, timedelta
 import math
+import os
 from shapely.geometry import Point, mapping
 from shapely.ops import transform
 from pyproj import Proj, Transformer
 from pytz import utc
+from typing import Union, List, Dict
 
-from satelliteTool.find_Satellite import get_valid_satellite_tle_as_dict
+from satelliteTool.get_TLE_data import get_tle
+
+# 确保保存目录存在
+SAVE_DIR = "./geojson"
+os.makedirs(SAVE_DIR, exist_ok=True)
 
 
-def get_coverage_lace(
-		tle_dict: dict,
+
+def get_observation_lace(
+		satellite_names: Union[str, List[str]],
 		start_time_str: str,
 		end_time_str: str,
 		fov: float = 10.0,
 		interval_seconds: int = 300
-) -> dict:
+) -> Union[str, Dict[str, str]]:
 	"""
-	计算多个卫星在指定时间段内的地面覆盖轨迹，并返回一个字典。
-	函数现在更健壮，能够处理无效的TLE数据而不会中断。
-
-	:param tle_dict: 一个字典，键是卫星名称(str)，值是两行的TLE字符串(str)。
-	:param start_time_str: 观测开始时间的字符串 (例如 "2025-08-01 00:00:00.000")。
-	:param end_time_str: 观测结束时间的字符串 (例如 "2025-08-01 23:59:59.000")。
-	:param fov: 卫星的视场角 (Field of View)，单位是度。默认为 10.0。
-	:param interval_seconds: 计算轨迹点的时间间隔，单位是秒。默认为 300 (5分钟)。
-	:return: 字典，键为卫星名称，值为对应的GeoJSON FeatureCollection。
+	获取一个或多个卫星的观测轨迹并保存为GeoJSON文件。
+	
+	参数:
+		satellite_names (Union[str, List[str]]): 
+			单个卫星名称（字符串），或多个卫星名称组成的列表。
+		start_time_str (str): 观测开始时间的字符串 (例如 "2025-08-01 00:00:00.000")。
+		end_time_str (str): 观测结束时间的字符串 (例如 "2025-08-01 23:59:59.000")。
+		fov (float): 卫星的视场角 (Field of View)，单位是度。默认为 10.0。
+		interval_seconds (int): 计算轨迹点的时间间隔，单位是秒。默认为 300 (5分钟)。
+	
+	返回:
+		Union[str, Dict[str, str]]:
+			- 如果传入单个名称，返回对应的GeoJSON文件名（不含路径）。
+			- 如果传入多个名称，返回字典，键为卫星名称，值为对应的GeoJSON文件名（不含路径）。
+			- 文件实际保存在 ./geojson/ 目录下。
 	"""
+	# 如果是单个字符串，转为列表处理
+	is_single = isinstance(satellite_names, str)
+	names = [satellite_names] if is_single else satellite_names
+	
+	# 获取TLE数据
+	tle_data = get_tle(names)
+	if is_single:
+		tle_data = {satellite_names: tle_data}
+	
+	# 准备TLE字典，格式化为三行格式
+	tle_dict = {}
+	for name, tle_str in tle_data.items():
+		if isinstance(tle_str, str) and not tle_str.startswith("Error") and not tle_str.startswith("Exception") and tle_str.strip():
+			# 添加卫星名作为第0行
+			tle_dict[name] = f"{name}\n{tle_str}"
+	
+	if not tle_dict:
+		error_msg = "No valid TLE data found"
+		return error_msg if is_single else {name: error_msg for name in names}
+	
+	# 计算覆盖轨迹
+	coverage_results = {}
+	
 	# 优化：在函数作用域内只加载一次 timescale
-	# 指定一个目录来缓存下载的星历文件，避免每次都在当前目录下载
 	load = Loader('~/skyfield-data', verbose=False)
 	ts = load.timescale()
-
-	satellite_features = {}
 
 	for name, tle_lines_str in tle_dict.items():
 		print(f"---> 正在处理卫星: {name}")
@@ -43,11 +76,19 @@ def get_coverage_lace(
 		try:
 			# 1. 解析TLE和时间
 			try:
-				tle_line1, tle_line2 = tle_lines_str.strip().split('\n')
-			except ValueError:
-				raise ValueError("TLE 格式无效，必须是包含换行符的两行字符串。")
+				lines = tle_lines_str.strip().split('\n')
+				if len(lines) >= 3:
+					# 三行格式：卫星名、TLE第一行、TLE第二行
+					tle_line1, tle_line2 = lines[1].strip(), lines[2].strip()
+				elif len(lines) == 2:
+					# 两行格式：TLE第一行、TLE第二行
+					tle_line1, tle_line2 = lines[0].strip(), lines[1].strip()
+				else:
+					raise ValueError("TLE 格式无效")
+			except (ValueError, IndexError):
+				raise ValueError("TLE 格式无效，必须是包含换行符的TLE字符串。")
 
-			satellite = EarthSatellite(tle_line1.strip(), tle_line2.strip(), name, ts)
+			satellite = EarthSatellite(tle_line1, tle_line2, name, ts)
 
 			# 检查卫星轨道是否已衰退
 			if satellite.model.error != 0:
@@ -110,40 +151,56 @@ def get_coverage_lace(
 			# 即使出错，也继续处理下一个卫星
 
 		finally:
-			satellite_features[name] = geojson.FeatureCollection(features_for_satellite)
-
-	return satellite_features
+			coverage_results[name] = geojson.FeatureCollection(features_for_satellite)
+	
+	# 保存结果并返回文件名
+	results = {}
+	for name in names:
+		if name in coverage_results:
+			# 生成文件名
+			safe_name = name.replace(' ', '_').replace('/', '_')
+			filename = f"{safe_name}_observation_lace.geojson"
+			file_path = os.path.join(SAVE_DIR, filename)
+			
+			try:
+				# 保存GeoJSON文件
+				with open(file_path, 'w', encoding='utf-8') as f:
+					geojson.dump(coverage_results[name], f, indent=2)
+				results[name] = filename  # 只返回文件名，不包含路径
+			except Exception as e:
+				results[name] = f"Error saving file: {e}"
+		else:
+			results[name] = "No coverage data generated"
+	
+	return results[satellite_names] if is_single else results
 
 
 if __name__ == '__main__':
-	# --- 1. 定义包含所有卫星TLE的字典 ---
-	database_file = 'D:\GeoSensingAPI\data\satellite_data.db'
-	tle_data_dict = get_valid_satellite_tle_as_dict(database_file)
-
+	# --- 测试新的API ---
+	satellite_name = "LANDSAT 8"
 	start_time = "2025-08-01 00:00:00.000"
 	end_time = "2025-08-01 23:59:59.000"
-	field_of_view = 10.0
-	time_interval = 600
-
-	print(f"--- 开始计算 {len(tle_data_dict)} 颗卫星的覆盖范围 ---")
-	print(f"时间范围: {start_time} to {end_time}")
-
-	coverage_dict = get_coverage_lace(
-		tle_dict=tle_data_dict,
+	
+	print(f"--- 测试获取 {satellite_name} 的观测轨迹 ---")
+	result = get_observation_lace(
+		satellite_names=satellite_name,
 		start_time_str=start_time,
 		end_time_str=end_time,
-		fov=field_of_view,
-		interval_seconds=time_interval
+		fov=15.0,
+		interval_seconds=600
 	)
-
-	total_features = sum(len(geojson['features']) for geojson in coverage_dict.values())
-	print(f"\n--- 计算完成，总共生成了 {total_features} 个足迹。 ---")
-	print(f"--- 涉及 {len(coverage_dict)} 颗卫星 ---")
-
-	output_filename = "satellite_coverage_2025-08-01.json"
-	try:
-		with open(output_filename, 'w') as f:
-			geojson.dump(coverage_dict, f, indent=2)
-		print(f"✅ 结果已成功保存到文件: {output_filename}")
-	except Exception as e:
-		print(f"❌ 保存文件时出错: {e}")
+	print(f"结果: {result}")
+	
+	# --- 测试多个卫星 ---
+	satellite_names = ["LANDSAT 8", "LANDSAT 9"]
+	print(f"\n--- 测试获取多个卫星的观测轨迹 ---")
+	results = get_observation_lace(
+		satellite_names=satellite_names,
+		start_time_str=start_time,
+		end_time_str=end_time,
+		fov=15.0,
+		interval_seconds=600
+	)
+	print(f"结果: {results}")
+	
+	print(f"\n--- 函数更新完成，统一使用新接口 ---")

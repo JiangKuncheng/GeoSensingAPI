@@ -271,7 +271,7 @@
   },
   "examples": [
     {
-      "thought": "The user needs to calculate ground coverage trajectories for multiple satellites within a specified time period to assess observation capabilities. Based on previous analysis, the current task follows a toolchain of [Task/Requirement Phase -> Discovery Phase -> Evaluation Phase]. The task is currently in the Discovery Phase. To proceed, I need to call the `get_observation_lace` function to calculate satellite coverage trajectories based on TLE data. This function requires a TLE data dictionary, time range, and observation parameters as input to generate GeoJSON format coverage results. After obtaining the output from the get_observation_lace tool, it can be used for subsequent coverage analysis and observation planning.",
+      "thought": "The user needs to calculate ground coverage trajectories for multiple satellites within a specified time period to assess observation capabilities. Based on previous analysis, the current task follows a process chain of [Task/Requirement Phase -> Discovery Phase -> Evaluation Phase]. The task is currently in the Discovery Phase. To proceed, I need to call the `get_observation_lace` function to calculate satellite coverage trajectories based on TLE data. This function requires a TLE data dictionary, time range, and observation parameters as input to generate GeoJSON format coverage results. After obtaining the output from the get_observation_lace tool, it can be used for subsequent coverage analysis and observation planning.",
       "tool": "get_observation_lace",
       "input": {
         "tle_dict": {
@@ -284,7 +284,7 @@
       }
     },
     {
-      "thought": "The user needs to analyze satellite coverage for a specific region and requires satellite coverage trajectories first. Based on previous analysis, the current task follows a toolchain of [Task/Requirement Phase -> Discovery Phase]. The task is currently in the Discovery Phase. To proceed, I need to call the `get_observation_lace` function to calculate satellite ground footprints within the given time window. This function accepts TLE data and time parameters, outputting GeoJSON format coverage trajectories that can be used for subsequent spatial analysis.",
+      "thought": "The user needs to analyze satellite coverage for a specific region and requires satellite coverage trajectories first. Based on previous analysis, the current task follows a process chain of [Task/Requirement Phase -> Discovery Phase]. The task is currently in the Discovery Phase. To proceed, I need to call the `get_observation_lace` function to calculate satellite ground footprints within the given time window. This function accepts TLE data and time parameters, outputting GeoJSON format coverage trajectories that can be used for subsequent spatial analysis.",
       "tool": "get_observation_lace",
       "input": {
         "tle_dict": {
